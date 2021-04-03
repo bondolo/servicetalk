@@ -77,7 +77,7 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         original.delegateSubscribe(
-                TimeoutSubscriber.newInstance(this, subscriber, signalOffloader, contextMap, contextProvider),
+                TimeoutSubscriber.newInstance(this, subscriber, contextMap, contextProvider),
                 signalOffloader, contextMap, contextProvider);
     }
 
@@ -103,7 +103,6 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                 AtomicReferenceFieldUpdater.newUpdater(TimeoutSubscriber.class, Subscription.class, "subscription");
         private final TimeoutPublisher<X> parent;
         private final ConcurrentTerminalSubscriber<? super X> target;
-        private final SignalOffloader signalOffloader;
         private final AsyncContextProvider contextProvider;
         @Nullable
         private volatile Subscription subscription;
@@ -124,20 +123,17 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
 
         private TimeoutSubscriber(TimeoutPublisher<X> parent,
                                   Subscriber<? super X> target,
-                                  SignalOffloader signalOffloader,
                                   AsyncContextProvider contextProvider) {
             this.parent = parent;
             this.target = new ConcurrentTerminalSubscriber<>(target);
-            this.signalOffloader = signalOffloader;
             this.contextProvider = contextProvider;
         }
 
         static <X> TimeoutSubscriber<X> newInstance(TimeoutPublisher<X> parent,
                                                     Subscriber<? super X> target,
-                                                    SignalOffloader signalOffloader,
                                                     AsyncContextMap contextMap,
                                                     AsyncContextProvider contextProvider) {
-            TimeoutSubscriber<X> s = new TimeoutSubscriber<>(parent, target, signalOffloader, contextProvider);
+            TimeoutSubscriber<X> s = new TimeoutSubscriber<>(parent, target, contextProvider);
             try {
                 s.lastStartNS = System.nanoTime();
                 // CAS is just in case the timer fired, the timerFires method schedule a new timer before this thread is
@@ -152,7 +148,7 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                 timerCancellableUpdater.compareAndSet(s, null, requireNonNull(
                         parent.timeoutExecutor.schedule(s::timerFires, parent.durationNs, NANOSECONDS)));
             } catch (Throwable cause) {
-                handleConstructorException(s, signalOffloader, contextMap, contextProvider, cause);
+                handleConstructorException(s, contextMap, contextProvider, cause);
             }
             return s;
         }
@@ -274,8 +270,7 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
             } else {
                 // We rely upon the timeout Executor to save/restore the context. so we just use
                 // contextProvider.contextMap() here.
-                signalOffloader.offloadSignal(cause, contextProvider.wrapConsumer(this::processTimeout,
-                        contextProvider.contextMap()));
+                contextProvider.wrapConsumer(this::processTimeout, contextProvider.contextMap()).accept(cause);
             }
         }
 

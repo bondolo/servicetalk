@@ -49,7 +49,6 @@ final class SingleFlatMapPublisher<T, R> extends AbstractNoHandleSubscribePublis
             implements SingleSource.Subscriber<T>, Subscriber<R> {
         private final Subscriber<? super R> subscriber;
         private final Function<? super T, ? extends Publisher<? extends R>> nextFactory;
-        private final SignalOffloader signalOffloader;
         private final AsyncContextMap contextMap;
         private final AsyncContextProvider contextProvider;
 
@@ -59,7 +58,6 @@ final class SingleFlatMapPublisher<T, R> extends AbstractNoHandleSubscribePublis
                        final AsyncContextProvider contextProvider) {
             this.subscriber = subscriber;
             this.nextFactory = requireNonNull(nextFactory);
-            this.signalOffloader = signalOffloader;
             this.contextMap = contextMap;
             this.contextProvider = contextProvider;
         }
@@ -93,7 +91,7 @@ final class SingleFlatMapPublisher<T, R> extends AbstractNoHandleSubscribePublis
             // being notified in the Subscriber path, but we make sure that it is restored after the asynchronous
             // boundary and explicitly use it to subscribe.
             next.subscribeInternal((Subscriber<? super R>)
-                    signalOffloader.offloadSubscriber(contextProvider.wrapPublisherSubscriber(this, contextMap)));
+                   contextProvider.wrapPublisherSubscriber(this, contextMap));
         }
 
         @Override

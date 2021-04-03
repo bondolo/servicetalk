@@ -74,7 +74,6 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
         private final RedoWhenPublisher<T> redoPublisher;
         private final AsyncContextMap contextMap;
         private final AsyncContextProvider contextProvider;
-        private final SignalOffloader signalOffloader;
 
         RedoSubscriber(SequentialSubscription subscription, int redoCount, Subscriber<? super T> subscriber,
                        AsyncContextMap contextMap, AsyncContextProvider contextProvider,
@@ -83,7 +82,6 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
             this.redoPublisher = redoPublisher;
             this.contextMap = contextMap;
             this.contextProvider = contextProvider;
-            this.signalOffloader = signalOffloader;
             cancellable = new SequentialCancellable();
         }
 
@@ -144,7 +142,7 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                     // we save a copy upfront.
                     redoPublisher.original.delegateSubscribe(
                             new RedoSubscriber<>(subscription, redoCount + 1, subscriber, contextMap.copy(),
-                                    contextProvider, redoPublisher, signalOffloader), signalOffloader,
+                                    contextProvider, redoPublisher), signalOffloader,
                             contextMap, contextProvider);
                 }
 
