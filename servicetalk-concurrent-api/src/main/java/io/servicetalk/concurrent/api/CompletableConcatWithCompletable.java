@@ -36,7 +36,7 @@ final class CompletableConcatWithCompletable extends AbstractNoHandleSubscribeCo
     }
 
     @Override
-    protected void handleSubscribe(Subscriber subscriber,  AsyncContextMap contextMap,
+    protected void handleSubscribe(Subscriber subscriber, AsyncContextMap contextMap,
                                    AsyncContextProvider contextProvider) {
         // We have the following cases to consider w.r.t offloading signals:
         //
