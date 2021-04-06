@@ -19,14 +19,12 @@ import io.servicetalk.concurrent.api.Completable;
 import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.api.Publisher;
 import io.servicetalk.concurrent.api.Single;
-import io.servicetalk.concurrent.internal.SignalOffloaderFactory;
 import io.servicetalk.http.api.HttpExecutionStrategies.Builder.MergeStrategy;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-import static io.servicetalk.concurrent.api.internal.OffloaderAwareExecutor.ensureThreadAffinity;
 import static io.servicetalk.http.api.HttpExecutionStrategies.Builder.MergeStrategy.Merge;
 import static io.servicetalk.http.api.HttpExecutionStrategies.Builder.MergeStrategy.ReturnOther;
 import static io.servicetalk.http.api.HttpExecutionStrategies.difference;
@@ -50,7 +48,7 @@ class DefaultHttpExecutionStrategy implements HttpExecutionStrategy {
     DefaultHttpExecutionStrategy(@Nullable final Executor executor, final byte offloads, final boolean threadAffinity,
                                  final MergeStrategy mergeStrategy) {
         this.mergeStrategy = mergeStrategy;
-        this.executor = executor != null ? threadAffinity ? ensureThreadAffinity(executor) : executor : null;
+        this.executor = executor;
         this.offloads = offloads;
         this.threadAffinity = threadAffinity;
     }
@@ -247,8 +245,7 @@ class DefaultHttpExecutionStrategy implements HttpExecutionStrategy {
     }
 
     private static boolean extractThreadAffinity(@Nullable final Executor otherExecutor) {
-        return otherExecutor instanceof SignalOffloaderFactory &&
-                ((SignalOffloaderFactory) otherExecutor).hasThreadAffinity();
+        return false;
     }
 
     private static byte generateOffloadsFlag(final HttpExecutionStrategy strategy) {
@@ -290,7 +287,7 @@ class DefaultHttpExecutionStrategy implements HttpExecutionStrategy {
 
     private Executor executor(final Executor fallback) {
         requireNonNull(fallback);
-        return executor == null ? threadAffinity ? ensureThreadAffinity(fallback) : fallback : executor;
+        return executor == null ? fallback : executor;
     }
 
     // Visible for testing

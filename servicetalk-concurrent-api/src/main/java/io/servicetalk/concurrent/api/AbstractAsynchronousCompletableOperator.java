@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -38,7 +36,7 @@ abstract class AbstractAsynchronousCompletableOperator extends AbstractNoHandleS
     }
 
     @Override
-    final void handleSubscribe(Subscriber subscriber, SignalOffloader signalOffloader, AsyncContextMap contextMap,
+    final void handleSubscribe(Subscriber subscriber, AsyncContextMap contextMap,
                                AsyncContextProvider contextProvider) {
         // Offload signals to the passed Subscriber making sure they are not invoked in the thread that
         // asynchronously processes signals. This is because the thread that processes the signals may have different
@@ -47,8 +45,8 @@ abstract class AbstractAsynchronousCompletableOperator extends AbstractNoHandleS
         // The AsyncContext needs to be preserved when ever we interact with the original Subscriber, so we wrap it here
         // with the original contextMap. Otherwise some other context may leak into this subscriber chain from the other
         // side of the asynchronous boundary.
-        final Subscriber operatorSubscriber = signalOffloader.offloadSubscriber(
-                contextProvider.wrapCompletableSubscriberAndCancellable(subscriber, contextMap));
+        final Subscriber operatorSubscriber =
+                contextProvider.wrapCompletableSubscriberAndCancellable(subscriber, contextMap);
         // Subscriber to use to subscribe to the original source. Since this is an asynchronous operator, it may call
         // Cancellable method from EventLoop (if the asynchronous source created/obtained inside this operator uses
         // EventLoop) which may execute blocking code on EventLoop, eg: beforeCancel(). So, we should offload
@@ -56,7 +54,7 @@ abstract class AbstractAsynchronousCompletableOperator extends AbstractNoHandleS
         //
         // We are introducing offloading on the Subscription, which means the AsyncContext may leak if we don't save
         // and restore the AsyncContext before/after the asynchronous boundary.
-        final Subscriber upstreamSubscriber = signalOffloader.offloadCancellable(apply(operatorSubscriber));
-        original.delegateSubscribe(upstreamSubscriber, signalOffloader, contextMap, contextProvider);
+        final Subscriber upstreamSubscriber = apply(operatorSubscriber);
+        original.delegateSubscribe(upstreamSubscriber, contextMap, contextProvider);
     }
 }

@@ -16,7 +16,6 @@
 package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.SingleSource;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 

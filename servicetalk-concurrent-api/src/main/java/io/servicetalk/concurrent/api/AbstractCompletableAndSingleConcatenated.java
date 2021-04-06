@@ -18,7 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.internal.SequentialCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import javax.annotation.Nullable;
 
@@ -29,7 +28,7 @@ abstract class AbstractCompletableAndSingleConcatenated<T> extends AbstractNoHan
     }
 
     @Override
-    protected void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader offloader,
+    protected void handleSubscribe(final Subscriber<? super T> subscriber,
                                    final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // Since we use the same Subscriber for two sources we always need to offload it. We do not subscribe to the
         // next source using the same offloader so we have the following cases:
@@ -48,12 +47,11 @@ abstract class AbstractCompletableAndSingleConcatenated<T> extends AbstractNoHan
         // eventloop. Important thing to note is that once the next Source is subscribed we never touch the original
         // Source. So, we do not need to do anything special there.
         // In order to cover for this case ((2) above) we always offload the passed Subscriber here.
-        final Subscriber<? super T> offloadSubscriber = offloader.offloadSubscriber(
-                contextProvider.wrapSingleSubscriber(subscriber, contextMap));
-        delegateSubscribeToOriginal(offloadSubscriber, offloader, contextMap, contextProvider);
+        final Subscriber<? super T> wrappedSubscriber = contextProvider.wrapSingleSubscriber(subscriber, contextMap);
+        delegateSubscribeToOriginal(wrappedSubscriber, contextMap, contextProvider);
     }
 
-    abstract void delegateSubscribeToOriginal(Subscriber<? super T> offloadSubscriber, SignalOffloader offloader,
+    abstract void delegateSubscribeToOriginal(Subscriber<? super T> offloadSubscriber,
                                               AsyncContextMap contextMap, AsyncContextProvider contextProvider);
 
     abstract static class AbstractConcatWithSubscriber<T> implements Subscriber<T>, CompletableSource.Subscriber {

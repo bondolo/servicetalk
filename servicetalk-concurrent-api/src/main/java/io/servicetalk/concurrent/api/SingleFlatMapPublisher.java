@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.SingleSource;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -39,10 +38,10 @@ final class SingleFlatMapPublisher<T, R> extends AbstractNoHandleSubscribePublis
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super R> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super R> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(new SubscriberImpl<>(subscriber, nextFactory, signalOffloader,
-                        contextMap, contextProvider), signalOffloader, contextMap, contextProvider);
+        original.delegateSubscribe(new SubscriberImpl<>(subscriber, nextFactory,
+                        contextMap, contextProvider), contextMap, contextProvider);
     }
 
     private static final class SubscriberImpl<T, R> extends DelayedCancellableThenSubscription
@@ -54,8 +53,7 @@ final class SingleFlatMapPublisher<T, R> extends AbstractNoHandleSubscribePublis
 
         SubscriberImpl(Subscriber<? super R> subscriber,
                        Function<? super T, ? extends Publisher<? extends R>> nextFactory,
-                       final SignalOffloader signalOffloader, final AsyncContextMap contextMap,
-                       final AsyncContextProvider contextProvider) {
+                       final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             this.subscriber = subscriber;
             this.nextFactory = requireNonNull(nextFactory);
             this.contextMap = contextMap;

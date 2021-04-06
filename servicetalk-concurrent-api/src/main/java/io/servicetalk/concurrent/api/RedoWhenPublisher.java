@@ -18,7 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.internal.SequentialCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 import io.servicetalk.concurrent.internal.TerminalNotification;
 
 import java.util.function.BiFunction;
@@ -58,14 +57,14 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     }
 
     @Override
-    void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
+    void handleSubscribe(Subscriber<? super T> subscriber,
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         // For the current subscribe operation we want to use contextMap directly, but in the event a re-subscribe
         // operation occurs we want to restore the original state of the AsyncContext map, so we save a copy upfront.
         original.delegateSubscribe(
                 new RedoSubscriber<>(new SequentialSubscription(), 0, subscriber,
-                        contextMap.copy(), contextProvider, this, signalOffloader),
-                signalOffloader, contextMap, contextProvider);
+                        contextMap.copy(), contextProvider, this),
+                contextMap, contextProvider);
     }
 
     private static final class RedoSubscriber<T> extends RedoPublisher.AbstractRedoSubscriber<T> {
@@ -77,7 +76,7 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
 
         RedoSubscriber(SequentialSubscription subscription, int redoCount, Subscriber<? super T> subscriber,
                        AsyncContextMap contextMap, AsyncContextProvider contextProvider,
-                       RedoWhenPublisher<T> redoPublisher, final SignalOffloader signalOffloader) {
+                       RedoWhenPublisher<T> redoPublisher) {
             super(subscription, redoCount, subscriber);
             this.redoPublisher = redoPublisher;
             this.contextMap = contextMap;
@@ -142,7 +141,7 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                     // we save a copy upfront.
                     redoPublisher.original.delegateSubscribe(
                             new RedoSubscriber<>(subscription, redoCount + 1, subscriber, contextMap.copy(),
-                                    contextProvider, redoPublisher), signalOffloader,
+                                    contextProvider, redoPublisher),
                             contextMap, contextProvider);
                 }
 

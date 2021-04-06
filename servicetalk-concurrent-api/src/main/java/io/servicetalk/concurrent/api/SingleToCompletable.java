@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.SingleSource;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +31,7 @@ final class SingleToCompletable<T> extends AbstractNoHandleSubscribeCompletable 
     }
 
     @Override
-    void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // We are not modifying the Cancellable between sources, so we do not need to take care of offloading between
         // the sources (in this operator). If the Cancellable is configured to be offloaded, it will be done when the
@@ -56,6 +55,6 @@ final class SingleToCompletable<T> extends AbstractNoHandleSubscribeCompletable 
                 // Since this is converting a Single to a Completable, we should try to use the same SignalOffloader for
                 // subscribing to the original Single to avoid thread hop. Since, it is the same source, just viewed as
                 // a Completable, there is no additional risk of deadlock.
-                signalOffloader, contextMap, contextProvider);
+                contextMap, contextProvider);
     }
 }

@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 final class SingleSubscribeShareContext<T> extends AbstractNoHandleSubscribeSingle<T> {
     private final Single<T> original;
 
@@ -26,11 +24,11 @@ final class SingleSubscribeShareContext<T> extends AbstractNoHandleSubscribeSing
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super T> singleSubscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super T> singleSubscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // This operator currently only targets the subscribe method. Given this limitation if we try to change the
         // AsyncContextMap now it is possible that operators downstream in the subscribe call stack may have modified
         // the AsyncContextMap and we don't want to discard those changes by using a different AsyncContextMap.
-        original.handleSubscribe(singleSubscriber, signalOffloader, contextMap, contextProvider);
+        original.handleSubscribe(singleSubscriber, contextMap, contextProvider);
     }
 }

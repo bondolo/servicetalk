@@ -16,7 +16,6 @@
 package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.CompletableSource.Subscriber;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
@@ -32,11 +31,11 @@ final class PublishAndSubscribeOnCompletables {
         // No instance.
     }
 
-    static void deliverOnSubscribeAndOnError(Subscriber subscriber, SignalOffloader signalOffloader,
+    static void deliverOnSubscribeAndOnError(Subscriber subscriber,
                                              AsyncContextMap contextMap, AsyncContextProvider contextProvider,
                                              Throwable cause) {
         deliverErrorFromSource(
-                signalOffloader.offloadSubscriber(contextProvider.wrapCompletableSubscriber(subscriber, contextMap)),
+                contextProvider.wrapCompletableSubscriber(subscriber, contextMap),
                 cause);
     }
 
@@ -73,7 +72,7 @@ final class PublishAndSubscribeOnCompletables {
         }
 
         @Override
-        void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Completable that is returned
             // by this operator.
@@ -85,9 +84,8 @@ final class PublishAndSubscribeOnCompletables {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
-            original.subscribeWithSharedContext(
-                    signalOffloader.offloadSubscriber(
-                            contextProvider.wrapCompletableSubscriber(subscriber, contextMap)), contextProvider);
+            original.subscribeWithSharedContext(contextProvider.wrapCompletableSubscriber(subscriber, contextMap),
+                    contextProvider);
         }
     }
 
@@ -119,7 +117,7 @@ final class PublishAndSubscribeOnCompletables {
         }
 
         @Override
-        void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Completable that is returned
             // by this operator.
@@ -130,8 +128,7 @@ final class PublishAndSubscribeOnCompletables {
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
             original.subscribeWithSharedContext(
-                    signalOffloader.offloadSubscriber(
-                            contextProvider.wrapCompletableSubscriber(subscriber, contextMap)), contextProvider);
+                            contextProvider.wrapCompletableSubscriber(subscriber, contextMap), contextProvider);
         }
     }
 
@@ -165,7 +162,7 @@ final class PublishAndSubscribeOnCompletables {
         }
 
         @Override
-        void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Completable that is returned
             // by this operator.

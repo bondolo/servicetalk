@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -43,8 +41,8 @@ abstract class AbstractSynchronousPublisherOperator<T, R> extends AbstractNoHand
     }
 
     @Override
-    final void handleSubscribe(Subscriber<? super R> subscriber, SignalOffloader signalOffloader,
+    final void handleSubscribe(Subscriber<? super R> subscriber,
                                AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(apply(subscriber), signalOffloader, contextMap, contextProvider);
+        original.delegateSubscribe(apply(subscriber), contextMap, contextProvider);
     }
 }

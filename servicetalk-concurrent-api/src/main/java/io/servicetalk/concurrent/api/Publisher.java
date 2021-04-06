@@ -23,7 +23,6 @@ import io.servicetalk.concurrent.PublisherSource.Subscriber;
 import io.servicetalk.concurrent.PublisherSource.Subscription;
 import io.servicetalk.concurrent.SingleSource;
 import io.servicetalk.concurrent.api.BufferStrategy.Accumulator;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +58,6 @@ import static io.servicetalk.concurrent.api.PublisherDoOnUtils.doOnErrorSupplier
 import static io.servicetalk.concurrent.api.PublisherDoOnUtils.doOnNextSupplier;
 import static io.servicetalk.concurrent.api.PublisherDoOnUtils.doOnRequestSupplier;
 import static io.servicetalk.concurrent.api.PublisherDoOnUtils.doOnSubscribeSupplier;
-import static io.servicetalk.concurrent.internal.SignalOffloaders.newOffloaderFor;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 import static io.servicetalk.utils.internal.DurationUtils.toNanos;
 import static java.util.Objects.requireNonNull;
@@ -3622,35 +3620,29 @@ public abstract class Publisher<T> {
      * source.
      *
      * @param subscriber the subscriber.
-     * @param signalOffloader {@link SignalOffloader} to use for this {@link Subscriber}.
      * @param contextMap the {@link AsyncContextMap} to use for this {@link Subscriber}.
      * @param contextProvider the {@link AsyncContextProvider} used to wrap any objects to preserve
      * {@link AsyncContextMap}.
      */
-    final void delegateSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
+    final void delegateSubscribe(Subscriber<? super T> subscriber,
                                  AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
-        handleSubscribe(subscriber, signalOffloader, contextMap, contextProvider);
+        handleSubscribe(subscriber, contextMap, contextProvider);
     }
 
     private void subscribeWithContext(Subscriber<? super T> subscriber, AsyncContextProvider provider,
                                       AsyncContextMap contextMap) {
         requireNonNull(subscriber);
-        final SignalOffloader signalOffloader;
-        final Subscriber<? super T> offloadedSubscriber;
+        final Subscriber<? super T> wrappedSubscriber;
         try {
-            // This is a user-driven subscribe i.e. there is no SignalOffloader override, so create a new
-            // SignalOffloader to use.
-            signalOffloader = newOffloaderFor(executor);
             // Since this is a user-driven subscribe (end of the execution chain), offload subscription methods
             // We also want to make sure the AsyncContext is saved/restored for all interactions with the Subscription.
-            offloadedSubscriber =
-                    signalOffloader.offloadSubscription(provider.wrapSubscription(subscriber, contextMap));
+            wrappedSubscriber = provider.wrapSubscription(subscriber, contextMap);
         } catch (Throwable t) {
             deliverErrorFromSource(subscriber, t);
             return;
         }
-        signalOffloader.offloadSubscribe(offloadedSubscriber, provider.wrapConsumer(
-                s -> handleSubscribe(s, signalOffloader, contextMap, provider), contextMap));
+        provider.wrapConsumer((Subscriber<? super T> s) -> handleSubscribe(s, contextMap, provider), contextMap)
+                .accept(wrappedSubscriber);
     }
 
     /**
@@ -3663,12 +3655,11 @@ public abstract class Publisher<T> {
      * Operators that do not wish to wrap the passed {@link Subscriber} can override this method and omit the wrapping.
      *
      * @param subscriber the subscriber.
-     * @param signalOffloader {@link SignalOffloader} to use for this {@link Subscriber}.
      * @param contextMap the {@link AsyncContextMap} to use for this {@link Subscriber}.
      * @param contextProvider the {@link AsyncContextProvider} used to wrap any objects to preserve
      * {@link AsyncContextMap}.
      */
-    void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader, AsyncContextMap contextMap,
+    void handleSubscribe(Subscriber<? super T> subscriber, AsyncContextMap contextMap,
                          AsyncContextProvider contextProvider) {
         try {
             handleSubscribe(contextProvider.wrapPublisherSubscriber(subscriber, contextMap));

@@ -16,7 +16,6 @@
 package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.PublisherSource.Subscriber;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
@@ -32,12 +31,10 @@ final class PublishAndSubscribeOnPublishers {
         // No instance.
     }
 
-    static <T> void deliverOnSubscribeAndOnError(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
+    static <T> void deliverOnSubscribeAndOnError(Subscriber<? super T> subscriber,
                                                  AsyncContextMap contextMap, AsyncContextProvider contextProvider,
                                                  Throwable cause) {
-        deliverErrorFromSource(
-                signalOffloader.offloadSubscriber(contextProvider.wrapPublisherSubscriber(subscriber, contextMap)),
-                cause);
+        deliverErrorFromSource(contextProvider.wrapPublisherSubscriber(subscriber, contextMap), cause);
     }
 
     static <T> Publisher<T> publishAndSubscribeOn(Publisher<T> original, Executor executor) {
@@ -73,7 +70,7 @@ final class PublishAndSubscribeOnPublishers {
         }
 
         @Override
-        void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Publisher that is returned
             // by this operator.
@@ -117,7 +114,7 @@ final class PublishAndSubscribeOnPublishers {
         }
 
         @Override
-        void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Publisher that is returned
             // by this operator.
@@ -159,7 +156,7 @@ final class PublishAndSubscribeOnPublishers {
         }
 
         @Override
-        void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Publisher that is returned
             // by this operator.

@@ -18,7 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.SingleSource;
 import io.servicetalk.concurrent.internal.SequentialCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import javax.annotation.Nullable;
@@ -41,10 +40,10 @@ final class SingleToPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super T> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(new ConversionSubscriber<>(subscriber, signalOffloader, contextMap, contextProvider),
-                signalOffloader, contextMap, contextProvider);
+        original.delegateSubscribe(new ConversionSubscriber<>(subscriber, contextMap, contextProvider),
+                contextMap, contextProvider);
     }
 
     private static final class ConversionSubscriber<T> extends SequentialCancellable
@@ -57,7 +56,6 @@ final class SingleToPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
         private static final AtomicIntegerFieldUpdater<ConversionSubscriber> stateUpdater =
                 newUpdater(ConversionSubscriber.class, "state");
         private final Subscriber<? super T> subscriber;
-        private final SignalOffloader signalOffloader;
         private final AsyncContextMap contextMap;
         private final AsyncContextProvider contextProvider;
 
@@ -65,10 +63,9 @@ final class SingleToPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
         private T result;
         private volatile int state;
 
-        ConversionSubscriber(Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        ConversionSubscriber(Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             this.subscriber = subscriber;
-            this.signalOffloader = signalOffloader;
             this.contextMap = contextMap;
             this.contextProvider = contextProvider;
         }
@@ -114,7 +111,7 @@ final class SingleToPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                         // We have not offloaded the Subscriber as we generally emit to the Subscriber from the
                         // Single Subscriber methods which is correctly offloaded. This is the case where we invoke the
                         // Subscriber directly, hence we explicitly offload.
-                        terminateSuccessfully(result, offloadWithDummyOnSubscribe(subscriber, signalOffloader,
+                        terminateSuccessfully(result, offloadWithDummyOnSubscribe(subscriber,
                                 contextMap, contextProvider));
                         return;
                     } else if (cState == STATE_IDLE &&
@@ -125,8 +122,7 @@ final class SingleToPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                     }
                 }
             } else if (stateUpdater.getAndSet(this, STATE_TERMINATED) != STATE_TERMINATED) {
-                Subscriber<? super T> offloaded = offloadWithDummyOnSubscribe(subscriber, signalOffloader,
-                        contextMap, contextProvider);
+                Subscriber<? super T> offloaded = offloadWithDummyOnSubscribe(subscriber, contextMap, contextProvider);
                 try {
                     // offloadSubscriber before cancellation so that signalOffloader does not exit on seeing a cancel.
                     cancel();

@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -41,7 +39,7 @@ abstract class AbstractAsynchronousPublisherOperator<T, R> extends AbstractNoHan
     }
 
     @Override
-    final void handleSubscribe(Subscriber<? super R> subscriber, SignalOffloader signalOffloader,
+    final void handleSubscribe(Subscriber<? super R> subscriber,
                                AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         // Offload signals to the passed Subscriber making sure they are not invoked in the thread that
         // asynchronously processes signals. This is because the thread that processes the signals may have different
@@ -60,7 +58,7 @@ abstract class AbstractAsynchronousPublisherOperator<T, R> extends AbstractNoHan
         //
         // We are introducing offloading on the Subscription, which means the AsyncContext may leak if we don't save
         // and restore the AsyncContext before/after the asynchronous boundary.
-        final Subscriber<? super T> upstreamSubscriber = signalOffloader.offloadSubscription(apply(operatorSubscriber));
-        original.delegateSubscribe(upstreamSubscriber, signalOffloader, contextMap, contextProvider);
+        final Subscriber<? super T> upstreamSubscriber = apply(operatorSubscriber);
+        original.delegateSubscribe(upstreamSubscriber, contextMap, contextProvider);
     }
 }

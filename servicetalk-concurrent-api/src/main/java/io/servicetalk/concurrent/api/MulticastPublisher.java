@@ -21,7 +21,6 @@ import io.servicetalk.concurrent.internal.ConcurrentSubscription;
 import io.servicetalk.concurrent.internal.DelayedSubscription;
 import io.servicetalk.concurrent.internal.QueueFullException;
 import io.servicetalk.concurrent.internal.RejectedSubscribeException;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 import io.servicetalk.concurrent.internal.TerminalNotification;
 
 import org.slf4j.Logger;
@@ -111,12 +110,12 @@ final class MulticastPublisher<T> extends AbstractNoHandleSubscribePublisher<T> 
     }
 
     @Override
-    void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
+    void handleSubscribe(Subscriber<? super T> subscriber,
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         for (;;) {
             final int subscriberCount = this.subscriberCount;
             if (subscriberCount == subscribers.length() || subscriberCount < 0) {
-                deliverOnSubscribeAndOnError(subscriber, signalOffloader, contextMap, contextProvider,
+                deliverOnSubscribeAndOnError(subscriber, contextMap, contextProvider,
                         new RejectedSubscribeException("Only " + subscribers.length() + " subscribers are allowed!"));
                 break;
             }
@@ -129,7 +128,7 @@ final class MulticastPublisher<T> extends AbstractNoHandleSubscribePublisher<T> 
                 if (subscriberCount == subscribers.length() - 1) {
                     // This operator has special behavior where it chooses to use the AsyncContext and signal offloader
                     // from the last subscribe operation.
-                    original.delegateSubscribe(this, signalOffloader, contextMap, contextProvider);
+                    original.delegateSubscribe(this, contextMap, contextProvider);
                 }
                 break;
             }

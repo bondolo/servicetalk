@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 /**
  * Base class for all {@link Single}s that are created with already realized result and does not generate result
  * asynchronously.
@@ -26,14 +24,14 @@ import io.servicetalk.concurrent.internal.SignalOffloader;
 abstract class AbstractSynchronousSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
 
     @Override
-    final void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
+    final void handleSubscribe(Subscriber<? super T> subscriber,
                                AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         // Wrap the passed Subscriber with the SignalOffloader to make sure they are not invoked in the thread that
         // asynchronously processes signals and hence may not be safe to execute user code.
         //
         // We need to wrap the Subscriber to save/restore the AsyncContext on each operation or else the AsyncContext
         // may leak from another thread.
-        doSubscribe(signalOffloader.offloadSubscriber(contextProvider.wrapSingleSubscriber(subscriber, contextMap)));
+        doSubscribe(contextProvider.wrapSingleSubscriber(subscriber, contextMap));
     }
 
     /**

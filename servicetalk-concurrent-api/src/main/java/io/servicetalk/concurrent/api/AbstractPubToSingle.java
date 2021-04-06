@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.PublisherSource;
 import io.servicetalk.concurrent.PublisherSource.Subscription;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,17 +36,17 @@ abstract class AbstractPubToSingle<T> extends AbstractNoHandleSubscribeSingle<T>
     }
 
     @Override
-    final void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+    final void handleSubscribe(final Subscriber<? super T> subscriber,
                                final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // We are now subscribing to the original Publisher chain for the first time, re-using the SignalOffloader.
         // Using the special subscribe() method means it will not offload the Subscription (done in the public
         // subscribe() method). So, we use the SignalOffloader to offload subscription if required.
-        PublisherSource.Subscriber<? super T> offloadedSubscription = signalOffloader.offloadSubscription(
-                contextProvider.wrapSubscription(newSubscriber(subscriber), contextMap));
+        PublisherSource.Subscriber<? super T> wrappedSubscription =
+                contextProvider.wrapSubscription(newSubscriber(subscriber), contextMap);
         // Since this is converting a Publisher to a Single, we should try to use the same SignalOffloader for
         // subscribing to the original Publisher to avoid thread hop. Since, it is the same source, just viewed as a
         // Single, there is no additional risk of deadlock.
-        source.delegateSubscribe(offloadedSubscription, signalOffloader, contextMap, contextProvider);
+        source.delegateSubscribe(wrappedSubscription, contextMap, contextProvider);
     }
 
     abstract PublisherSource.Subscriber<T> newSubscriber(Subscriber<? super T> original);

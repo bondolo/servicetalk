@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.PublisherSource;
 import io.servicetalk.concurrent.internal.DelayedCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 /**
  * A {@link Completable} created from a {@link Publisher}.
@@ -40,17 +39,17 @@ abstract class AbstractPubToCompletable<T> extends AbstractNoHandleSubscribeComp
     abstract PublisherSource.Subscriber<T> newSubscriber(Subscriber original);
 
     @Override
-    final void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
+    final void handleSubscribe(final Subscriber subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        // We are now subscribing to the original Publisher chain for the first time, re-using the SignalOffloader.
+        // We are now subscribing to the original Publisher chain for the first time,
         // Using the special subscribe() method means it will not offload the Subscription (done in the public
-        // subscribe() method). So, we use the SignalOffloader to offload subscription if required.
-        PublisherSource.Subscriber<? super T> offloadedSubscription = signalOffloader.offloadSubscription(
-                contextProvider.wrapSubscription(newSubscriber(subscriber), contextMap));
+        // subscribe() method).
+        PublisherSource.Subscriber<? super T> wrappedSubscription =
+                contextProvider.wrapSubscription(newSubscriber(subscriber), contextMap);
         // Since this is converting a Publisher to a Completable, we should try to use the same SignalOffloader for
         // subscribing to the original Publisher to avoid thread hop. Since, it is the same source, just viewed as a
         // Completable, there is no additional risk of deadlock.
-        source.delegateSubscribe(offloadedSubscription, signalOffloader, contextMap, contextProvider);
+        source.delegateSubscribe(wrappedSubscription, contextMap, contextProvider);
     }
 
     abstract static class AbstractPubToCompletableSubscriber<T> extends DelayedCancellable

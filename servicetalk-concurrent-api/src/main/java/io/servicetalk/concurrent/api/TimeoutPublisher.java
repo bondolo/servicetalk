@@ -18,7 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.internal.ConcurrentSubscription;
 import io.servicetalk.concurrent.internal.ConcurrentTerminalSubscriber;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -74,11 +73,11 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     }
 
     @Override
-    void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
+    void handleSubscribe(Subscriber<? super T> subscriber,
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         original.delegateSubscribe(
                 TimeoutSubscriber.newInstance(this, subscriber, contextMap, contextProvider),
-                signalOffloader, contextMap, contextProvider);
+                contextMap, contextProvider);
     }
 
     private static final class TimeoutSubscriber<X> implements Subscriber<X>, Subscription {
@@ -295,13 +294,13 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
          * This is unlikely to occur, so we extract the code into a private method.
          * @param cause The exception.
          */
-        private static <X> void handleConstructorException(TimeoutSubscriber<X> s, SignalOffloader offloader,
+        private static <X> void handleConstructorException(TimeoutSubscriber<X> s,
                                                            AsyncContextMap contextMap,
                                                            AsyncContextProvider contextProvider, Throwable cause) {
             // We must set local state so there are no further interactions with Subscriber in the future.
             s.timerCancellable = LOCAL_IGNORE_CANCEL;
             s.subscription = EMPTY_SUBSCRIPTION;
-            deliverOnSubscribeAndOnError(s.target, offloader, contextMap, contextProvider, cause);
+            deliverOnSubscribeAndOnError(s.target, contextMap, contextProvider, cause);
         }
     }
 }

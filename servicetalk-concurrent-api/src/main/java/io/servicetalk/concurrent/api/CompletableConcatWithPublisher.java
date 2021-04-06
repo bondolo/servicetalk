@@ -18,7 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.PublisherSource;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import javax.annotation.Nullable;
 
@@ -33,9 +32,9 @@ final class CompletableConcatWithPublisher<T> extends AbstractNoHandleSubscribeP
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super T> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(new ConcatSubscriber<>(subscriber, next), signalOffloader, contextMap,
+        original.delegateSubscribe(new ConcatSubscriber<>(subscriber, next), contextMap,
                 contextProvider);
     }
 

@@ -35,7 +35,7 @@ final class MergedExecutors {
      * {@code publishOnExecutor}.
      */
     static Executor mergeAndOffloadPublish(final Executor fallback, final Executor publishOnExecutor) {
-        return new MergedOffloadPublishExecutor(publishOnExecutor, fallback);
+        return publishOnExecutor;
     }
 
     /**
@@ -49,6 +49,6 @@ final class MergedExecutors {
      * {@code subscribeOnExecutor}.
      */
     static Executor mergeAndOffloadSubscribe(final Executor fallback, final Executor subscribeOnExecutor) {
-        return new MergedOffloadSubscribeExecutor(subscribeOnExecutor, fallback);
+        return subscribeOnExecutor;
     }
 }

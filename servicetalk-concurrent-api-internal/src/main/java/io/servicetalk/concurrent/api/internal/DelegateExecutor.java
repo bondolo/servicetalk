@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Apple Inc. and the ServiceTalk project authors
+ * Copyright © 2019 Apple Inc. and the ServiceTalk project authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,39 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.servicetalk.concurrent.api;
+package io.servicetalk.concurrent.api.internal;
 
 import io.servicetalk.concurrent.Cancellable;
+import io.servicetalk.concurrent.api.Completable;
+import io.servicetalk.concurrent.api.Executor;
 
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
-import static io.servicetalk.concurrent.api.Executors.from;
+import static java.util.Objects.requireNonNull;
 
-final class ImmediateExecutor extends AbstractExecutor {
+/**
+ * An {@link Executor}.
+ */
+public final class DelegateExecutor implements Executor {
 
-    private static final Executor IMMEDIATE = from(Runnable::run);
-    static final Executor IMMEDIATE_EXECUTOR = new ImmediateExecutor();
+    private final Executor delegate;
 
-    private ImmediateExecutor() {
-        // No instances
+    /**
+     * New instance.
+     *
+     * @param delegate Actual {@link Executor} to use.
+     */
+    public DelegateExecutor(final Executor delegate) {
+        this.delegate = requireNonNull(delegate);
     }
 
     @Override
     public Cancellable execute(final Runnable task) throws RejectedExecutionException {
-        task.run();
-        return IGNORE_CANCEL;
+        return delegate.execute(task);
     }
 
     @Override
     public Cancellable schedule(final Runnable task, final long delay, final TimeUnit unit)
             throws RejectedExecutionException {
-        return IMMEDIATE.schedule(task, delay, unit);
+        return delegate.schedule(task, delay, unit);
     }
 
     @Override
-    void doClose() {
-        // Noop
+    public Completable onClose() {
+        return delegate.onClose();
+    }
+
+    @Override
+    public Completable closeAsync() {
+        return delegate.closeAsync();
     }
 }

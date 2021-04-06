@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.internal.SequentialCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import javax.annotation.Nullable;
 
@@ -37,7 +36,7 @@ final class CompletableConcatWithCompletable extends AbstractNoHandleSubscribeCo
     }
 
     @Override
-    protected void handleSubscribe(Subscriber subscriber, SignalOffloader offloader, AsyncContextMap contextMap,
+    protected void handleSubscribe(Subscriber subscriber,  AsyncContextMap contextMap,
                                    AsyncContextProvider contextProvider) {
         // We have the following cases to consider w.r.t offloading signals:
         //
@@ -55,9 +54,9 @@ final class CompletableConcatWithCompletable extends AbstractNoHandleSubscribeCo
         // eventloop. Important thing to note is that once the next Completable is subscribed we never touch the
         // Cancellable of the original Completable. So, we do not need to do anything special there.
         // In order to cover for this case ((2) above) we always offload the passed Subscriber here.
-        Subscriber offloadSubscriber = offloader.offloadSubscriber(
-                contextProvider.wrapCompletableSubscriber(subscriber, contextMap));
-        original.delegateSubscribe(new ConcatWithSubscriber(offloadSubscriber, next), offloader,
+        Subscriber wrappedSubscriber =
+                contextProvider.wrapCompletableSubscriber(subscriber, contextMap);
+        original.delegateSubscribe(new ConcatWithSubscriber(wrappedSubscriber, next),
                 contextMap, contextProvider);
     }
 

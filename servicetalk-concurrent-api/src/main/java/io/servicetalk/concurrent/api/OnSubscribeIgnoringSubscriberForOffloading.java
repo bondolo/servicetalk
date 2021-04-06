@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.PublisherSource;
 import io.servicetalk.concurrent.PublisherSource.Subscriber;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import javax.annotation.Nullable;
 
@@ -52,9 +51,9 @@ final class OnSubscribeIgnoringSubscriberForOffloading<T> implements Subscriber<
     }
 
     static <T> Subscriber<? super T> offloadWithDummyOnSubscribe(Subscriber<? super T> original,
-            SignalOffloader offloader, AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
-        Subscriber<? super T> toReturn = offloader.offloadSubscriber(contextProvider.wrapPublisherSubscriber(
-                new OnSubscribeIgnoringSubscriberForOffloading<>(original), contextMap));
+            AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
+        Subscriber<? super T> toReturn = contextProvider.wrapPublisherSubscriber(
+                new OnSubscribeIgnoringSubscriberForOffloading<>(original), contextMap);
         // We have created an offloaded Subscriber but we have sent onSubscribe to the original Subscriber
         // already, so we send an onSubscribe to the offloaded Subscriber which ignores this signal but makes
         // the signalOffloader does not see spec violation (onError without onSubscribe) for the offloaded

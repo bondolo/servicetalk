@@ -20,7 +20,7 @@ import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.PublisherSource.Subscriber;
 import io.servicetalk.concurrent.PublisherSource.Subscription;
 import io.servicetalk.concurrent.SingleSource;
-import io.servicetalk.concurrent.api.internal.OffloaderAwareExecutor;
+import io.servicetalk.concurrent.api.internal.DelegateExecutor;
 import io.servicetalk.concurrent.internal.DeliberateException;
 import io.servicetalk.concurrent.internal.ServiceTalkTestTimeout;
 
@@ -38,7 +38,6 @@ import static io.servicetalk.concurrent.api.Executors.from;
 import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.internal.DeliberateException.DELIBERATE_EXCEPTION;
 import static io.servicetalk.concurrent.internal.EmptySubscriptions.EMPTY_SUBSCRIPTION;
-import static io.servicetalk.concurrent.internal.SignalOffloaders.threadBasedOffloaderFactory;
 
 @RunWith(Parameterized.class)
 public class ExecutorThrowsTest {
@@ -165,7 +164,7 @@ public class ExecutorThrowsTest {
         Executor original = from(task -> {
             throw DELIBERATE_EXCEPTION;
         });
-        return new OffloaderAwareExecutor(original, threadBasedOffloaderFactory());
+        return new DelegateExecutor(original);
     }
 
     private void verifyError() throws Throwable {

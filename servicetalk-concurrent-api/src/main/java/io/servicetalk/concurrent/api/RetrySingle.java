@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.internal.SequentialCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import javax.annotation.Nullable;
 
@@ -38,13 +37,13 @@ final class RetrySingle<T> extends AbstractNoHandleSubscribeSingle<T> {
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super T> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // For the current subscribe operation we want to use contextMap directly, but in the event a re-subscribe
         // operation occurs we want to restore the original state of the AsyncContext map, so we save a copy upfront.
         original.delegateSubscribe(new RetrySubscriber<>(new SequentialCancellable(), this, subscriber,
-                0, contextMap.copy(), contextProvider, signalOffloader),
-                signalOffloader, contextMap, contextProvider);
+                0, contextMap.copy(), contextProvider),
+                contextMap, contextProvider);
     }
 
     abstract static class AbstractRetrySubscriber<T> implements Subscriber<T> {
@@ -79,16 +78,14 @@ final class RetrySingle<T> extends AbstractNoHandleSubscribeSingle<T> {
         private final RetrySingle<T> retrySingle;
         private final AsyncContextMap contextMap;
         private final AsyncContextProvider contextProvider;
-        private final SignalOffloader signalOffloader;
 
         RetrySubscriber(SequentialCancellable sequentialCancellable, RetrySingle<T> retrySingle,
                         Subscriber<? super T> target, int retryCount, AsyncContextMap contextMap,
-                        AsyncContextProvider contextProvider, final SignalOffloader signalOffloader) {
+                        AsyncContextProvider contextProvider) {
             super(sequentialCancellable, target, retryCount);
             this.retrySingle = retrySingle;
             this.contextMap = contextMap;
             this.contextProvider = contextProvider;
-            this.signalOffloader = signalOffloader;
         }
 
         @Override
@@ -112,7 +109,7 @@ final class RetrySingle<T> extends AbstractNoHandleSubscribeSingle<T> {
                 // we save a copy upfront.
                 retrySingle.original.delegateSubscribe(
                         new RetrySubscriber<>(sequentialCancellable, retrySingle, target, retryCount + 1,
-                                contextMap.copy(), contextProvider, signalOffloader), signalOffloader,
+                                contextMap.copy(), contextProvider),
                         contextMap, contextProvider);
             } else {
                 target.onError(t);

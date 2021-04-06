@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -38,25 +36,23 @@ final class OnErrorResumePublisher<T> extends AbstractNoHandleSubscribePublisher
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super T> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(new ResumeSubscriber(subscriber, signalOffloader, contextMap, contextProvider),
-                signalOffloader, contextMap, contextProvider);
+        original.delegateSubscribe(new ResumeSubscriber(subscriber, contextMap, contextProvider),
+                contextMap, contextProvider);
     }
 
     private final class ResumeSubscriber implements Subscriber<T> {
         private final Subscriber<? super T> subscriber;
-        private final SignalOffloader signalOffloader;
         private final AsyncContextMap contextMap;
         private final AsyncContextProvider contextProvider;
         @Nullable
         private SequentialSubscription sequentialSubscription;
         private boolean resubscribed;
 
-        ResumeSubscriber(Subscriber<? super T> subscriber, SignalOffloader signalOffloader, AsyncContextMap contextMap,
+        ResumeSubscriber(Subscriber<? super T> subscriber, AsyncContextMap contextMap,
                          AsyncContextProvider contextProvider) {
             this.subscriber = subscriber;
-            this.signalOffloader = signalOffloader;
             this.contextMap = contextMap;
             this.contextProvider = contextProvider;
         }
@@ -97,9 +93,9 @@ final class OnErrorResumePublisher<T> extends AbstractNoHandleSubscribePublisher
                 // that the threading semantics may differ with respect to the original Subscriber when we emit signals
                 // from the new Publisher. This is the reason we use the original offloader now to offload signals which
                 // originate from this new Publisher.
-                final Subscriber<? super T> offloadedSubscriber = signalOffloader.offloadSubscriber(
-                        contextProvider.wrapPublisherSubscriber(this, contextMap));
-                next.subscribeInternal(offloadedSubscriber);
+                final Subscriber<? super T> wrappedSubscriber =
+                        contextProvider.wrapPublisherSubscriber(this, contextMap);
+                next.subscribeInternal(wrappedSubscriber);
             }
         }
 

@@ -21,7 +21,7 @@ import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.api.ExecutorRule;
 import io.servicetalk.concurrent.api.Publisher;
 import io.servicetalk.concurrent.api.PublisherWithExecutor;
-import io.servicetalk.concurrent.api.internal.OffloaderAwareExecutor;
+import io.servicetalk.concurrent.api.internal.DelegateExecutor;
 import io.servicetalk.concurrent.internal.ServiceTalkTestTimeout;
 
 import org.junit.Rule;
@@ -35,7 +35,6 @@ import static io.servicetalk.concurrent.api.Executors.newCachedThreadExecutor;
 import static io.servicetalk.concurrent.api.Publisher.from;
 import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.api.completable.AbstractPublishAndSubscribeOnTest.verifyCapturedThreads;
-import static io.servicetalk.concurrent.internal.SignalOffloaders.threadBasedOffloaderFactory;
 import static java.lang.Long.MAX_VALUE;
 import static java.lang.Thread.currentThread;
 
@@ -49,7 +48,7 @@ public abstract class AbstractPublishAndSubscribeOnTest {
     public final Timeout timeout = new ServiceTalkTestTimeout();
     @Rule
     public final ExecutorRule originalSourceExecutorRule = ExecutorRule.withExecutor(
-            () -> new OffloaderAwareExecutor(newCachedThreadExecutor(), threadBasedOffloaderFactory()));
+            () -> new DelegateExecutor(newCachedThreadExecutor()));
 
     protected AtomicReferenceArray<Thread> setupAndSubscribe(
             BiFunction<Publisher<String>, Executor, Publisher<String>> offloadingFunction, Executor executor)

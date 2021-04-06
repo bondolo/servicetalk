@@ -16,7 +16,6 @@
 package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.SingleSource;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
@@ -33,10 +32,10 @@ final class PublishAndSubscribeOnSingles {
     }
 
     static <T> void deliverOnSubscribeAndOnError(SingleSource.Subscriber<? super T> subscriber,
-                                                 SignalOffloader signalOffloader, AsyncContextMap contextMap,
+                                                 AsyncContextMap contextMap,
                                                  AsyncContextProvider contextProvider, Throwable cause) {
         deliverErrorFromSource(
-                signalOffloader.offloadSubscriber(contextProvider.wrapSingleSubscriber(subscriber, contextMap)), cause);
+                contextProvider.wrapSingleSubscriber(subscriber, contextMap), cause);
     }
 
     static <T> Single<T> publishAndSubscribeOn(Single<T> original, Executor executor) {
@@ -72,7 +71,7 @@ final class PublishAndSubscribeOnSingles {
         }
 
         @Override
-        void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Single that is returned
             // by this operator.
@@ -84,9 +83,7 @@ final class PublishAndSubscribeOnSingles {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
-            original.subscribeWithSharedContext(
-                    signalOffloader.offloadSubscriber(
-                            contextProvider.wrapSingleSubscriber(subscriber, contextMap)), contextProvider);
+            original.subscribeWithSharedContext(contextProvider.wrapSingleSubscriber(subscriber, contextMap), contextProvider);
         }
     }
 
@@ -118,7 +115,7 @@ final class PublishAndSubscribeOnSingles {
         }
 
         @Override
-        void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Single that is returned
             // by this operator.
@@ -129,8 +126,7 @@ final class PublishAndSubscribeOnSingles {
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
             original.subscribeWithSharedContext(
-                    signalOffloader.offloadSubscriber(
-                            contextProvider.wrapSingleSubscriber(subscriber, contextMap)), contextProvider);
+                    contextProvider.wrapSingleSubscriber(subscriber, contextMap), contextProvider);
         }
     }
 
@@ -164,7 +160,7 @@ final class PublishAndSubscribeOnSingles {
         }
 
         @Override
-        void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        void handleSubscribe(final Subscriber<? super T> subscriber,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             // This operator is to make sure that we use the executor to subscribe to the Single that is returned
             // by this operator.

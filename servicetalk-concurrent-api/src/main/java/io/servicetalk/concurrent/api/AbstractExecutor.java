@@ -16,17 +16,16 @@
 package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.CompletableSource;
-import io.servicetalk.concurrent.internal.SignalOffloaderFactory;
 
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import javax.annotation.Nullable;
 
 import static java.util.concurrent.atomic.AtomicReferenceFieldUpdater.newUpdater;
 
-abstract class AbstractOffloaderAwareExecutor implements SignalOffloaderFactory, Executor {
+abstract class AbstractExecutor implements Executor {
 
-    private static final AtomicReferenceFieldUpdater<AbstractOffloaderAwareExecutor, CompletableProcessor>
-            onCloseUpdater = newUpdater(AbstractOffloaderAwareExecutor.class, CompletableProcessor.class, "onClose");
+    private static final AtomicReferenceFieldUpdater<AbstractExecutor, CompletableProcessor>
+            onCloseUpdater = newUpdater(AbstractExecutor.class, CompletableProcessor.class, "onClose");
 
     @SuppressWarnings("unused")
     @Nullable

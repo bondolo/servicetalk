@@ -18,7 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.internal.SequentialCancellable;
-import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
@@ -40,10 +39,10 @@ final class CompletableToPublisher<T> extends AbstractNoHandleSubscribePublisher
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super T> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(new ConversionSubscriber<>(subscriber, signalOffloader, contextMap, contextProvider),
-                signalOffloader, contextMap, contextProvider);
+        original.delegateSubscribe(new ConversionSubscriber<>(subscriber, contextMap, contextProvider),
+                contextMap, contextProvider);
     }
 
     private static final class ConversionSubscriber<T> extends SequentialCancellable
@@ -52,16 +51,14 @@ final class CompletableToPublisher<T> extends AbstractNoHandleSubscribePublisher
         private static final AtomicIntegerFieldUpdater<ConversionSubscriber> terminatedUpdater =
                 newUpdater(ConversionSubscriber.class, "terminated");
         private final Subscriber<? super T> subscriber;
-        private final SignalOffloader signalOffloader;
         private final AsyncContextMap contextMap;
         private final AsyncContextProvider contextProvider;
 
         private volatile int terminated;
 
-        private ConversionSubscriber(Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
+        private ConversionSubscriber(Subscriber<? super T> subscriber,
                                      final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             this.subscriber = subscriber;
-            this.signalOffloader = signalOffloader;
             this.contextMap = contextMap;
             this.contextProvider = contextProvider;
         }
@@ -92,8 +89,7 @@ final class CompletableToPublisher<T> extends AbstractNoHandleSubscribePublisher
                 // We have not offloaded the Subscriber as we generally emit to the Subscriber from the Completable
                 // Subscriber methods which is correctly offloaded. This is the only case where we invoke the
                 // Subscriber directly, hence we explicitly offload.
-                Subscriber<? super T> offloaded = offloadWithDummyOnSubscribe(subscriber, signalOffloader,
-                        contextMap, contextProvider);
+                Subscriber<? super T> offloaded = offloadWithDummyOnSubscribe(subscriber, contextMap, contextProvider);
                 try {
                     // offloadSubscriber before cancellation so that signalOffloader does not exit on seeing a cancel.
                     cancel();
