@@ -21,19 +21,15 @@ import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFro
 
 /**
  * A {@link Completable} that does not expect to receive a call to {@link #handleSubscribe(Subscriber)} since it
- * overrides {@link #handleSubscribe(Subscriber, SignalOffloader, AsyncContextMap, AsyncContextProvider)}.
+ * overrides {@link #handleSubscribe(Subscriber, AsyncContextMap, AsyncContextProvider)}.
  */
 abstract class AbstractNoHandleSubscribeCompletable extends Completable implements CompletableSource {
 
     AbstractNoHandleSubscribeCompletable() {
     }
 
-    AbstractNoHandleSubscribeCompletable(Executor executor) {
-        super(executor);
-    }
-
-    AbstractNoHandleSubscribeCompletable(final Executor executor, final boolean shareContextOnSubscribe) {
-        super(executor, shareContextOnSubscribe);
+    AbstractNoHandleSubscribeCompletable(final boolean shareContextOnSubscribe) {
+        super(shareContextOnSubscribe);
     }
 
     @Override

@@ -56,12 +56,11 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     private final boolean restartAtOnNext;
 
     TimeoutPublisher(final Publisher<T> original,
-                     final Executor publisherExecutor,
                      final long duration,
                      final TimeUnit unit,
                      final boolean restartAtOnNext,
                      final io.servicetalk.concurrent.Executor timeoutExecutor) {
-        super(publisherExecutor);
+        super();
         this.original = requireNonNull(original);
         this.timeoutExecutor = requireNonNull(timeoutExecutor);
         // We use the duration in arithmetic below to determine the expiration time for the "next timer" below. So

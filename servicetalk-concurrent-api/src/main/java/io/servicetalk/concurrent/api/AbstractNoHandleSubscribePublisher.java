@@ -22,7 +22,7 @@ import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFro
 
 /**
  * A {@link Publisher} that does not expect to receive a call to {@link #handleSubscribe(Subscriber)} since it overrides
- * {@link #handleSubscribe(Subscriber, SignalOffloader, AsyncContextMap, AsyncContextProvider)}.
+ * {@link #handleSubscribe(Subscriber, AsyncContextMap, AsyncContextProvider)}.
  *
  * @param <T> Type of items emitted.
  */
@@ -31,12 +31,8 @@ abstract class AbstractNoHandleSubscribePublisher<T> extends Publisher<T> implem
     AbstractNoHandleSubscribePublisher() {
     }
 
-    AbstractNoHandleSubscribePublisher(Executor executor) {
-        super(executor);
-    }
-
-    AbstractNoHandleSubscribePublisher(Executor executor, boolean shareContextOnSubscribe) {
-        super(executor, shareContextOnSubscribe);
+    AbstractNoHandleSubscribePublisher(boolean shareContextOnSubscribe) {
+        super(shareContextOnSubscribe);
     }
 
     @Override

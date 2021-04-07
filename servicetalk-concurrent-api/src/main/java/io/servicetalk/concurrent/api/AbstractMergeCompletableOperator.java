@@ -23,8 +23,7 @@ abstract class AbstractMergeCompletableOperator<T extends CompletableMergeSubscr
 
     private final Completable original;
 
-    AbstractMergeCompletableOperator(Completable original, Executor executor) {
-        super(executor);
+    AbstractMergeCompletableOperator(Completable original) {
         this.original = requireNonNull(original);
     }
 

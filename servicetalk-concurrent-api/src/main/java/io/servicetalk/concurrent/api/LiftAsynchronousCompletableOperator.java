@@ -25,9 +25,8 @@ final class LiftAsynchronousCompletableOperator extends AbstractAsynchronousComp
     private final Function<Subscriber, Subscriber> customOperator;
 
     LiftAsynchronousCompletableOperator(Completable original,
-                                        Function<Subscriber, Subscriber> customOperator,
-                                        Executor executor) {
-        super(original, executor);
+                                        Function<Subscriber, Subscriber> customOperator) {
+        super(original);
         this.customOperator = requireNonNull(customOperator);
     }
 

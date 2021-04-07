@@ -32,14 +32,13 @@ final class ScanWithPublisher<T, R> extends AbstractNoHandleSubscribePublisher<R
     private final Publisher<T> original;
     private final Supplier<? extends ScanWithMapper<? super T, ? extends R>> mapperSupplier;
 
-    ScanWithPublisher(Publisher<T> original, Supplier<R> initial, BiFunction<R, ? super T, R> accumulator,
-                      Executor executor) {
-        this(original, new SupplierScanWithMapper<>(initial, accumulator), executor);
+    ScanWithPublisher(Publisher<T> original, Supplier<R> initial, BiFunction<R, ? super T, R> accumulator) {
+        this(original, new SupplierScanWithMapper<>(initial, accumulator));
     }
 
-    ScanWithPublisher(Publisher<T> original, Supplier<? extends ScanWithMapper<? super T, ? extends R>> mapperSupplier,
-                      Executor executor) {
-        super(executor, true);
+    ScanWithPublisher(Publisher<T> original, Supplier<? extends ScanWithMapper<? super T, ? extends R>> mapperSupplier
+    ) {
+        super(true);
         this.mapperSupplier = requireNonNull(mapperSupplier);
         this.original = original;
     }

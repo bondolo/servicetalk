@@ -17,6 +17,8 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.PublisherSource.Subscriber;
 
+import java.util.Objects;
+
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
@@ -63,9 +65,10 @@ final class PublishAndSubscribeOnPublishers {
 
     private static final class PublishAndSubscribeOn<T> extends AbstractNoHandleSubscribePublisher<T> {
         private final Publisher<T> original;
+        private final Executor executor;
 
         PublishAndSubscribeOn(final Executor executor, final Publisher<T> original) {
-            super(executor);
+            this.executor = executor;
             this.original = original;
         }
 
@@ -93,8 +96,11 @@ final class PublishAndSubscribeOnPublishers {
      * overrides the {@link Executor} that will be used to do the offloading.
      */
     private static final class PublishAndSubscribeOnOverride<T> extends AbstractSynchronousPublisherOperator<T, T> {
+        private final Executor executor;
+
         PublishAndSubscribeOnOverride(final Publisher<T> original, final Executor executor) {
-            super(original, executor);
+            super(original);
+            this.executor = Objects.requireNonNull(executor);
         }
 
         @Override

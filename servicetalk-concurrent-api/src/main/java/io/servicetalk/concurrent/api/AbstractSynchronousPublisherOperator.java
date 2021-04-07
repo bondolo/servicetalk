@@ -15,6 +15,7 @@
  */
 package io.servicetalk.concurrent.api;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -35,8 +36,7 @@ abstract class AbstractSynchronousPublisherOperator<T, R> extends AbstractNoHand
 
     private final Publisher<T> original;
 
-    AbstractSynchronousPublisherOperator(Publisher<T> original, Executor executor) {
-        super(executor);
+    AbstractSynchronousPublisherOperator(Publisher<T> original) {
         this.original = requireNonNull(original);
     }
 
@@ -44,5 +44,10 @@ abstract class AbstractSynchronousPublisherOperator<T, R> extends AbstractNoHand
     final void handleSubscribe(Subscriber<? super R> subscriber,
                                AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         original.delegateSubscribe(apply(subscriber), contextMap, contextProvider);
+    }
+
+    @Override
+    Executor executor() {
+        return immediate();
     }
 }

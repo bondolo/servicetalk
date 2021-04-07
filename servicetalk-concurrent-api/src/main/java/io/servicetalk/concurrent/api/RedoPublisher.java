@@ -33,8 +33,7 @@ final class RedoPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     private final Publisher<T> original;
     private final BiPredicate<Integer, TerminalNotification> shouldRedo;
 
-    RedoPublisher(Publisher<T> original, BiPredicate<Integer, TerminalNotification> shouldRedo, Executor executor) {
-        super(executor);
+    RedoPublisher(Publisher<T> original, BiPredicate<Integer, TerminalNotification> shouldRedo) {
         this.original = original;
         this.shouldRedo = shouldRedo;
     }
@@ -44,8 +43,9 @@ final class RedoPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         // For the current subscribe operation we want to use contextMap directly, but in the event a re-subscribe
         // operation occurs we want to restore the original state of the AsyncContext map, so we save a copy upfront.
-        original.delegateSubscribe(new RedoSubscriber<>(new SequentialSubscription(), 0, subscriber, contextMap.copy(),
-                contextProvider, this), contextMap, contextProvider);
+        original.delegateSubscribe(new RedoSubscriber<>(
+                new SequentialSubscription(), 0, subscriber, contextMap.copy(), contextProvider, this),
+                contextMap, contextProvider);
     }
 
     abstract static class AbstractRedoSubscriber<T> implements Subscriber<T> {

@@ -30,8 +30,7 @@ abstract class AbstractAsynchronousCompletableOperator extends AbstractNoHandleS
 
     private final Completable original;
 
-    AbstractAsynchronousCompletableOperator(Completable original, Executor executor) {
-        super(executor);
+    AbstractAsynchronousCompletableOperator(Completable original) {
         this.original = requireNonNull(original);
     }
 
