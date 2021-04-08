@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.SingleSource.Subscriber;
-
 /**
  * A {@link Single} that could be created with an {@link Executor}.
  *
@@ -30,7 +28,7 @@ public final class SingleWithExecutor<T> extends AbstractSynchronousSingleOperat
      * @param delegate {@link Single} to use.
      */
     public SingleWithExecutor(final Executor executor, Single<T> delegate) {
-        super(delegate, executor);
+        super(delegate);
     }
 
     @Override

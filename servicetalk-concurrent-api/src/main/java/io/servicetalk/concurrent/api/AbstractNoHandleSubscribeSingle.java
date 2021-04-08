@@ -21,7 +21,7 @@ import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFro
 
 /**
  * A {@link Single} that does not expect to receive a call to {@link #handleSubscribe(Subscriber)} since it overrides
- * {@link #handleSubscribe(Subscriber, SignalOffloader, AsyncContextMap, AsyncContextProvider)}.
+ * {@link #handleSubscribe(Subscriber, AsyncContextMap, AsyncContextProvider)}.
  *
  * @param <T> Type of the result of the single.
  */
@@ -30,12 +30,8 @@ abstract class AbstractNoHandleSubscribeSingle<T> extends Single<T> implements S
     AbstractNoHandleSubscribeSingle() {
     }
 
-    AbstractNoHandleSubscribeSingle(Executor executor) {
-        super(executor);
-    }
-
-    AbstractNoHandleSubscribeSingle(final Executor executor, final boolean shareContextOnSubscribe) {
-        super(executor, shareContextOnSubscribe);
+    AbstractNoHandleSubscribeSingle(final boolean shareContextOnSubscribe) {
+        super(shareContextOnSubscribe);
     }
 
     @Override

@@ -30,8 +30,7 @@ final class OnErrorResumeSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
     private final Function<? super Throwable, ? extends Single<? extends T>> nextFactory;
 
     OnErrorResumeSingle(Single<T> original, Predicate<? super Throwable> predicate,
-                        Function<? super Throwable, ? extends Single<? extends T>> nextFactory, Executor executor) {
-        super(executor);
+                        Function<? super Throwable, ? extends Single<? extends T>> nextFactory) {
         this.original = original;
         this.predicate = requireNonNull(predicate);
         this.nextFactory = requireNonNull(nextFactory);

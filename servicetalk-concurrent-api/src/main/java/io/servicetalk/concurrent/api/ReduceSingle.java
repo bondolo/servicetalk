@@ -48,7 +48,6 @@ final class ReduceSingle<R, T> extends AbstractNoHandleSubscribeSingle<R> {
      */
     ReduceSingle(Publisher<T> source, Supplier<? extends R> resultFactory,
                  BiFunction<? super R, ? super T, R> reducer) {
-        super(source.executor());
         this.source = requireNonNull(source);
         this.resultFactory = requireNonNull(resultFactory);
         this.reducer = requireNonNull(reducer);

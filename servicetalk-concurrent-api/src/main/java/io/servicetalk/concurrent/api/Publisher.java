@@ -1533,89 +1533,6 @@ public abstract class Publisher<T> {
      * In the event of timeout any {@link Subscription} from
      * {@link Subscriber#onSubscribe(PublisherSource.Subscription)} will be {@link Subscription#cancel() cancelled} and
      * the associated {@link Subscriber} will be {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(long, TimeUnit)}.
-     * @param duration The time duration which is allowed to elapse between {@link Subscriber#onNext(Object)} calls.
-     * @param unit The units for {@code duration}.
-     * @return a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between {@link Subscriber#onNext(Object)} calls.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     * @see #timeout(long, TimeUnit, io.servicetalk.concurrent.Executor)
-     */
-    @Deprecated
-    public final Publisher<T> idleTimeout(long duration, TimeUnit unit) {
-        return timeout(duration, unit);
-    }
-
-    /**
-     * Creates a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between adjacent {@link Subscriber#onNext(Object)}
-     * calls. The timer starts when the returned {@link Publisher} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Subscription} from
-     * {@link Subscriber#onSubscribe(PublisherSource.Subscription)} will be {@link Subscription#cancel() cancelled}
-     * and the associated {@link Subscriber} will be {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(Duration)}
-     * @param duration The time duration which is allowed to elapse between {@link Subscriber#onNext(Object)} calls.
-     * @return a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between {@link Subscriber#onNext(Object)} calls.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     * @see #timeout(long, TimeUnit, io.servicetalk.concurrent.Executor)
-     */
-    @Deprecated
-    public final Publisher<T> idleTimeout(Duration duration) {
-        return timeout(duration);
-    }
-
-    /**
-     * Creates a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between adjacent {@link Subscriber#onNext(Object)}
-     * calls. The timer starts when the returned {@link Publisher} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Subscription} from
-     * {@link Subscriber#onSubscribe(PublisherSource.Subscription)} will be {@link Subscription#cancel() cancelled} and
-     * the associated {@link Subscriber} will be {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(long, TimeUnit, io.servicetalk.concurrent.Executor)}.
-     * @param duration The time duration which is allowed to elapse between {@link Subscriber#onNext(Object)} calls.
-     * @param unit The units for {@code duration}.
-     * @param timeoutExecutor The {@link Executor} to use for managing the timer notifications.
-     * @return a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between {@link Subscriber#onNext(Object)} calls.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     */
-    @Deprecated
-    public final Publisher<T> idleTimeout(long duration, TimeUnit unit,
-                                          io.servicetalk.concurrent.Executor timeoutExecutor) {
-        return timeout(duration, unit, timeoutExecutor);
-    }
-
-    /**
-     * Creates a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between adjacent {@link Subscriber#onNext(Object)}
-     * calls. The timer starts when the returned {@link Publisher} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Subscription} from
-     * {@link Subscriber#onSubscribe(PublisherSource.Subscription)} will be {@link Subscription#cancel() cancelled} and
-     * the associated {@link Subscriber} will be {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(Duration, io.servicetalk.concurrent.Executor)}.
-     * @param duration The time duration which is allowed to elapse between {@link Subscriber#onNext(Object)} calls.
-     * @param timeoutExecutor The {@link Executor} to use for managing the timer notifications.
-     * @return a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between {@link Subscriber#onNext(Object)} calls.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     */
-    @Deprecated
-    public final Publisher<T> idleTimeout(Duration duration, io.servicetalk.concurrent.Executor timeoutExecutor) {
-        return timeout(duration, timeoutExecutor);
-    }
-
-    /**
-     * Creates a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
-     * {@link TimeoutException} if time {@code duration} elapses between adjacent {@link Subscriber#onNext(Object)}
-     * calls. The timer starts when the returned {@link Publisher} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Subscription} from
-     * {@link Subscriber#onSubscribe(PublisherSource.Subscription)} will be {@link Subscription#cancel() cancelled} and
-     * the associated {@link Subscriber} will be {@link Subscriber#onError(Throwable) terminated}.
      * @param duration The time duration which is allowed to elapse between {@link Subscriber#onNext(Object)} calls.
      * @param unit The units for {@code duration}.
      * @return a new {@link Publisher} that will mimic the signals of this {@link Publisher} but will terminate with a
@@ -1624,7 +1541,7 @@ public abstract class Publisher<T> {
      * @see #timeout(long, TimeUnit, io.servicetalk.concurrent.Executor)
      */
     public final Publisher<T> timeout(long duration, TimeUnit unit) {
-        return timeout(duration, unit);
+        return timeout(duration, unit, executor());
     }
 
     /**
@@ -1642,7 +1559,7 @@ public abstract class Publisher<T> {
      * @see #timeout(long, TimeUnit, io.servicetalk.concurrent.Executor)
      */
     public final Publisher<T> timeout(Duration duration) {
-        return timeout(duration);
+        return timeout(duration, executor());
     }
 
     /**
@@ -1697,7 +1614,7 @@ public abstract class Publisher<T> {
      * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
      */
     public final Publisher<T> timeoutTerminal(Duration duration) {
-        return timeoutTerminal(duration);
+        return timeoutTerminal(duration, executor());
     }
 
     /**
@@ -1733,7 +1650,7 @@ public abstract class Publisher<T> {
      * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
      */
     public final Publisher<T> timeoutTerminal(long duration, TimeUnit unit) {
-        return timeoutTerminal(duration, unit);
+        return timeoutTerminal(duration, unit, executor());
     }
 
     /**

@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.PublisherSource.Subscriber;
-
 /**
  * A {@link Publisher} that could be created with an {@link Executor}.
  *
@@ -24,13 +22,15 @@ import io.servicetalk.concurrent.PublisherSource.Subscriber;
  */
 public final class PublisherWithExecutor<T> extends AbstractSynchronousPublisherOperator<T, T> {
 
+    private final Executor executor;
     /**
      * New instance.
      * @param executor {@link Executor} for this {@link Publisher}.
      * @param delegate {@link Publisher} to use.
      */
     public PublisherWithExecutor(final Executor executor, Publisher<T> delegate) {
-        super(delegate, executor);
+        super(delegate);
+        this.executor = executor;
     }
 
     @Override

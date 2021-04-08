@@ -17,8 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.SingleSource;
 
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -63,10 +61,11 @@ final class PublishAndSubscribeOnSingles {
     }
 
     private static final class PublishAndSubscribeOn<T> extends AbstractNoHandleSubscribeSingle<T> {
+        private final Executor executor;
         private final Single<T> original;
 
         PublishAndSubscribeOn(final Executor executor, final Single<T> original) {
-            super(executor);
+            this.executor = executor;
             this.original = original;
         }
 
@@ -86,6 +85,11 @@ final class PublishAndSubscribeOnSingles {
             original.subscribeWithSharedContext(
                     contextProvider.wrapSingleSubscriber(subscriber, contextMap), contextProvider);
         }
+
+        @Override
+        public Executor executor() {
+            return executor;
+        }
     }
 
     /**
@@ -96,7 +100,7 @@ final class PublishAndSubscribeOnSingles {
      */
     private static final class PublishAndSubscribeOnOverride<T> extends AbstractSynchronousSingleOperator<T, T> {
         PublishAndSubscribeOnOverride(final Single<T> original, final Executor executor) {
-            super(original, executor);
+            super(original);
         }
 
         @Override
@@ -108,10 +112,11 @@ final class PublishAndSubscribeOnSingles {
     }
 
     private static class PublishOn<T> extends AbstractNoHandleSubscribeSingle<T> {
+        private final Executor executor;
         private final Single<T> original;
 
         PublishOn(final Executor executor, final Single<T> original) {
-            super(mergeAndOffloadPublish(original.executor(), executor));
+            this.executor = executor;
             this.original = original;
         }
 
@@ -129,6 +134,11 @@ final class PublishAndSubscribeOnSingles {
             original.subscribeWithSharedContext(
                     contextProvider.wrapSingleSubscriber(subscriber, contextMap), contextProvider);
         }
+
+        @Override
+        public Executor executor() {
+            return executor;
+        }
     }
 
     /**
@@ -141,7 +151,7 @@ final class PublishAndSubscribeOnSingles {
     private static final class PublishOnOverride<T> extends AbstractSynchronousSingleOperator<T, T> {
 
         PublishOnOverride(final Single<T> original, final Executor executor) {
-            super(original, mergeAndOffloadPublish(original.executor(), executor));
+            super(original);
         }
 
         @Override
@@ -156,7 +166,6 @@ final class PublishAndSubscribeOnSingles {
         private final Single<T> original;
 
         SubscribeOn(final Executor executor, final Single<T> original) {
-            super(mergeAndOffloadSubscribe(original.executor(), executor));
             this.original = original;
         }
 
@@ -186,7 +195,7 @@ final class PublishAndSubscribeOnSingles {
     private static final class SubscribeOnOverride<T> extends AbstractSynchronousSingleOperator<T, T> {
 
         SubscribeOnOverride(final Single<T> original, final Executor executor) {
-            super(original, mergeAndOffloadSubscribe(original.executor(), executor));
+            super(original);
         }
 
         @Override
