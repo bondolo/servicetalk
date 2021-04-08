@@ -434,7 +434,7 @@ public abstract class Single<T> {
      * {@link Single} completes successfully.
      */
     public final Completable flatMapCompletable(Function<? super T, ? extends Completable> next) {
-        return new SingleFlatMapCompletable<>(this, next, executor);
+        return new SingleFlatMapCompletable<>(this, next);
     }
 
     /**
@@ -456,7 +456,7 @@ public abstract class Single<T> {
      * {@link Single} completes successfully.
      */
     public final <R> Publisher<R> flatMapPublisher(Function<? super T, ? extends Publisher<? extends R>> next) {
-        return new SingleFlatMapPublisher<>(this, next, executor);
+        return new SingleFlatMapPublisher<>(this, next);
     }
 
     /**
@@ -848,7 +848,7 @@ public abstract class Single<T> {
      * terminates successfully.
      */
     public final Single<T> concat(Completable next) {
-        return new SingleConcatWithCompletable<>(this, next, executor);
+        return new SingleConcatWithCompletable<>(this, next);
     }
 
     /**
@@ -869,7 +869,7 @@ public abstract class Single<T> {
      * all elements from {@code next} {@link Publisher}.
      */
     public final Publisher<T> concat(Publisher<? extends T> next) {
-        return new SingleConcatWithPublisher<>(this, next, executor);
+        return new SingleConcatWithPublisher<>(this, next);
     }
 
     /**
@@ -1642,7 +1642,7 @@ public abstract class Single<T> {
      * @return A {@link Publisher} that emits at most a single item which is emitted by this {@code Single}.
      */
     public final Publisher<T> toPublisher() {
-        return new SingleToPublisher<>(this, executor);
+        return new SingleToPublisher<>(this);
     }
 
     /**
@@ -1652,7 +1652,7 @@ public abstract class Single<T> {
      * @return A {@link Completable} that mirrors the terminal signal from this {@code Single}.
      */
     public final Completable toCompletable() {
-        return new SingleToCompletable<>(this, executor);
+        return new SingleToCompletable<>(this);
     }
 
     /**

@@ -19,8 +19,6 @@ import io.servicetalk.concurrent.PublisherSource.Subscriber;
 
 import java.util.Objects;
 
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -113,10 +111,11 @@ final class PublishAndSubscribeOnPublishers {
 
     private static final class PublishOn<T> extends AbstractNoHandleSubscribePublisher<T> {
         private final Publisher<T> original;
+        final Executor executor;
 
         PublishOn(final Executor executor, final Publisher<T> original) {
-            super(mergeAndOffloadPublish(original.executor(), executor));
             this.original = original;
+            this.executor = executor;
         }
 
         @Override
@@ -140,9 +139,11 @@ final class PublishAndSubscribeOnPublishers {
      * overrides the {@link Executor} that will be used to do the offloading.
      */
     private static final class PublishOnOverride<T> extends AbstractSynchronousPublisherOperator<T, T> {
+        final Executor executor;
 
         PublishOnOverride(final Publisher<T> original, final Executor executor) {
-            super(original, mergeAndOffloadPublish(original.executor(), executor));
+            super(original);
+            this.executor = executor;
         }
 
         @Override
@@ -155,10 +156,11 @@ final class PublishAndSubscribeOnPublishers {
 
     private static final class SubscribeOn<T> extends AbstractNoHandleSubscribePublisher<T> {
         private final Publisher<T> original;
+        final Executor executor;
 
         SubscribeOn(final Executor executor, final Publisher<T> original) {
-            super(mergeAndOffloadSubscribe(original.executor(), executor));
             this.original = original;
+            this.executor = executor;
         }
 
         @Override
@@ -185,9 +187,11 @@ final class PublishAndSubscribeOnPublishers {
      * overrides the Executor that will be used to do the offloading.
      */
     private static final class SubscribeOnOverride<T> extends AbstractSynchronousPublisherOperator<T, T> {
+        final Executor executor;
 
         SubscribeOnOverride(final Publisher<T> original, final Executor executor) {
-            super(original, mergeAndOffloadSubscribe(original.executor(), executor));
+            super(original);
+            this.executor = executor;
         }
 
         @Override

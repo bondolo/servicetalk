@@ -51,7 +51,7 @@ final class PublisherGroupToMany<Key, T> extends AbstractPublisherGroupBy<Key, T
 
         SourceSubscriber(Executor executor, PublisherGroupToMany<Key, T> source,
                          Subscriber<? super GroupedPublisher<Key, T>> target) {
-            super(executor, source.initialCapacityForGroups, target);
+            super(source.initialCapacityForGroups, target);
             this.source = source;
         }
 

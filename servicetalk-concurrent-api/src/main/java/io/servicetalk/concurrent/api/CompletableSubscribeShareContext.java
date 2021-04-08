@@ -19,7 +19,7 @@ final class CompletableSubscribeShareContext extends AbstractNoHandleSubscribeCo
     private final Completable original;
 
     CompletableSubscribeShareContext(final Completable original) {
-        super(original.executor(), true);
+        super(true);
         this.original = original;
     }
 

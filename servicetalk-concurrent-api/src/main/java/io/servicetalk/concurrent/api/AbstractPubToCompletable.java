@@ -32,7 +32,6 @@ abstract class AbstractPubToCompletable<T> extends AbstractNoHandleSubscribeComp
      * @param source {@link Publisher} from which this {@link Completable} is created.
      */
     AbstractPubToCompletable(Publisher<T> source) {
-        super(source.executor());
         this.source = source;
     }
 

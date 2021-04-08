@@ -1712,9 +1712,7 @@ public abstract class Completable {
      */
     protected abstract void handleSubscribe(Subscriber subscriber);
 
-    //
-    // Static Utility Methods Begin
-    //
+    // <editor-fold desc="Static Utility Methods">
 
     /**
      * Creates a realized completed {@code Completable}.
@@ -2130,13 +2128,9 @@ public abstract class Completable {
         return amb(completables);
     }
 
-    //
-    // Static Utility Methods End
-    //
+    // </editor-fold>
 
-    //
-    // Internal Methods Begin
-    //
+    // <editor-fold desc="Internal Methods">
 
     /**
      * Subscribes to this {@link Completable} and shares the current context.
@@ -2216,7 +2210,5 @@ public abstract class Completable {
         return immediate();
     }
 
-    //
-    // Internal Methods End
-    //
+    // </editor-fold>
 }

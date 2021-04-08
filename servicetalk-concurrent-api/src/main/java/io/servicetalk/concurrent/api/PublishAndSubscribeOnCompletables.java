@@ -17,8 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.CompletableSource.Subscriber;
 
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -65,10 +63,11 @@ final class PublishAndSubscribeOnCompletables {
 
     private static final class PublishAndSubscribeOn extends AbstractNoHandleSubscribeCompletable {
         private final Completable original;
+        final Executor executor;
 
         PublishAndSubscribeOn(final Executor executor, final Completable original) {
-            super(executor);
             this.original = original;
+            this.executor = executor;
         }
 
         @Override
@@ -96,8 +95,10 @@ final class PublishAndSubscribeOnCompletables {
      * offloading, it just overrides the {@link Executor} that will be used to do the offloading.
      */
     private static final class PublishAndSubscribeOnOverride extends AbstractSynchronousCompletableOperator {
+        final Executor executor;
         PublishAndSubscribeOnOverride(final Completable original, final Executor executor) {
-            super(original, executor);
+            super(original);
+            this.executor = executor;
         }
 
         @Override
@@ -110,10 +111,11 @@ final class PublishAndSubscribeOnCompletables {
 
     private static final class PublishOn extends AbstractNoHandleSubscribeCompletable {
         private final Completable original;
+        final Executor executor;
 
         PublishOn(final Executor executor, final Completable original) {
-            super(mergeAndOffloadPublish(original.executor(), executor));
             this.original = original;
+            this.executor = executor;
         }
 
         @Override
@@ -140,9 +142,11 @@ final class PublishAndSubscribeOnCompletables {
      * just overrides the {@link Executor} that will be used to do the offloading.
      */
     private static final class PublishOnOverride extends AbstractSynchronousCompletableOperator {
+        final Executor executor;
 
         PublishOnOverride(final Completable original, final Executor executor) {
-            super(original, mergeAndOffloadPublish(original.executor(), executor));
+            super(original);
+            this.executor = executor;
         }
 
         @Override
@@ -155,10 +159,11 @@ final class PublishAndSubscribeOnCompletables {
 
     private static final class SubscribeOn extends AbstractNoHandleSubscribeCompletable {
         private final Completable original;
+        final Executor executor;
 
         SubscribeOn(final Executor executor, final Completable original) {
-            super(mergeAndOffloadSubscribe(original.executor(), executor));
             this.original = original;
+            this.executor = executor;
         }
 
         @Override
@@ -185,9 +190,11 @@ final class PublishAndSubscribeOnCompletables {
      * just overrides the {@link Executor} that will be used to do the offloading.
      */
     private static final class SubscribeOnOverride extends AbstractSynchronousCompletableOperator {
+        final Executor executor;
 
         SubscribeOnOverride(final Completable original, final Executor executor) {
-            super(original, mergeAndOffloadSubscribe(original.executor(), executor));
+            super(original);
+            this.executor = executor;
         }
 
         @Override
