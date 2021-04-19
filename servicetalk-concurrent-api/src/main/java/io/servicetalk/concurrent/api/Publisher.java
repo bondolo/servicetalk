@@ -101,9 +101,7 @@ public abstract class Publisher<T> {
         this.shareContextOnSubscribe = shareContextOnSubscribe;
     }
 
-    //
-    // Operators Begin
-    //
+    // <editor-fold desc="Operators">
 
     /**
      * Transforms elements emitted by this {@link Publisher} into a different type.
@@ -2734,7 +2732,7 @@ public abstract class Publisher<T> {
      * methods.
      * This method does <strong>not</strong> override preceding {@link Executor}s, if any, specified for {@code this}
      * {@link Publisher}. Only subsequent operations, if any, added in this execution chain will use this
-     * {@link Executor}. If such an override is required, {@link #publishOnOverride(Executor)} can be used.
+     * {@link Executor}.
      *
      * @param executor {@link Executor} to use.
      * @return A new {@link Publisher} that will use the passed {@link Executor} to invoke all methods of
@@ -2745,21 +2743,6 @@ public abstract class Publisher<T> {
     }
 
     /**
-     * Creates a new {@link Publisher} that will use the passed {@link Executor} to invoke all {@link Subscriber}
-     * methods.
-     * This method overrides preceding {@link Executor}s, if any, specified for {@code this} {@link Publisher}.
-     * That is to say preceding and subsequent operations for this execution chain will use this {@link Executor}.
-     * If such an override is not required, {@link #publishOn(Executor)} can be used.
-     *
-     * @param executor {@link Executor} to use.
-     * @return A new {@link Publisher} that will use the passed {@link Executor} to invoke all methods of
-     * {@link Subscriber} both for the returned {@link Publisher} as well as {@code this} {@link Publisher}.
-     */
-    public final Publisher<T> publishOnOverride(Executor executor) {
-        return PublishAndSubscribeOnPublishers.publishOnOverride(this, executor);
-    }
-
-    /**
      * Creates a new {@link Publisher} that will use the passed {@link Executor} to invoke the following methods:
      * <ul>
      *     <li>All {@link Subscription} methods.</li>
@@ -2767,7 +2750,7 @@ public abstract class Publisher<T> {
      * </ul>
      * This method does <strong>not</strong> override preceding {@link Executor}s, if any, specified for {@code this}
      * {@link Publisher}. Only subsequent operations, if any, added in this execution chain will use this
-     * {@link Executor}. If such an override is required, {@link #subscribeOnOverride(Executor)} can be used.
+     * {@link Executor}.
      *
      * @param executor {@link Executor} to use.
      * @return A new {@link Publisher} that will use the passed {@link Executor} to invoke all methods of
@@ -2780,32 +2763,13 @@ public abstract class Publisher<T> {
     /**
      * Creates a new {@link Publisher} that will use the passed {@link Executor} to invoke the following methods:
      * <ul>
-     *     <li>All {@link Subscription} methods.</li>
-     *     <li>The {@link #handleSubscribe(PublisherSource.Subscriber)} method.</li>
-     * </ul>
-     * This method overrides preceding {@link Executor}s, if any, specified for {@code this} {@link Publisher}.
-     * That is to say preceding and subsequent operations for this execution chain will use this {@link Executor}.
-     * If such an override is not required, {@link #subscribeOn(Executor)} can be used.
-     *
-     * @param executor {@link Executor} to use.
-     * @return A new {@link Publisher} that will use the passed {@link Executor} to invoke all methods of
-     * {@link Subscription} and {@link #handleSubscribe(PublisherSource.Subscriber)} both for the returned
-     * {@link Publisher} as well as {@code this} {@link Publisher}.
-     */
-    public final Publisher<T> subscribeOnOverride(Executor executor) {
-        return PublishAndSubscribeOnPublishers.subscribeOnOverride(this, executor);
-    }
-
-    /**
-     * Creates a new {@link Publisher} that will use the passed {@link Executor} to invoke the following methods:
-     * <ul>
      *     <li>All {@link Subscriber} methods.</li>
      *     <li>All {@link Subscription} methods.</li>
      *     <li>The {@link #handleSubscribe(PublisherSource.Subscriber)} method.</li>
      * </ul>
      * This method does <strong>not</strong> override preceding {@link Executor}s, if any, specified for {@code this}
      * {@link Publisher}. Only subsequent operations, if any, added in this execution chain will use this
-     * {@link Executor}. If such an override is required, {@link #publishAndSubscribeOnOverride(Executor)} can be used.
+     * {@link Executor}.
      *
      * @param executor {@link Executor} to use.
      * @return A new {@link Publisher} that will use the passed {@link Executor} to invoke all methods
@@ -2813,26 +2777,6 @@ public abstract class Publisher<T> {
      */
     public final Publisher<T> publishAndSubscribeOn(Executor executor) {
         return PublishAndSubscribeOnPublishers.publishAndSubscribeOn(this, executor);
-    }
-
-    /**
-     * Creates a new {@link Publisher} that will use the passed {@link Executor} to invoke the following methods:
-     * <ul>
-     *     <li>All {@link Subscriber} methods.</li>
-     *     <li>All {@link Subscription} methods.</li>
-     *     <li>The {@link #handleSubscribe(PublisherSource.Subscriber)} method.</li>
-     * </ul>
-     * This method overrides preceding {@link Executor}s, if any, specified for {@code this} {@link Publisher}.
-     * That is to say preceding and subsequent operations for this execution chain will use this {@link Executor}.
-     * If such an override is not required, {@link #publishAndSubscribeOn(Executor)} can be used.
-     *
-     * @param executor {@link Executor} to use.
-     * @return A new {@link Publisher} that will use the passed {@link Executor} to invoke all methods of
-     * {@link Subscriber}, {@link Subscription} and {@link #handleSubscribe(PublisherSource.Subscriber)} both for the
-     * returned {@link Publisher} as well as {@code this} {@link Publisher}.
-     */
-    public final Publisher<T> publishAndSubscribeOnOverride(Executor executor) {
-        return PublishAndSubscribeOnPublishers.publishAndSubscribeOnOverride(this, executor);
     }
 
     /**
@@ -2943,13 +2887,9 @@ public abstract class Publisher<T> {
         return new LiftAsynchronousPublisherOperator<>(this, operator);
     }
 
-    //
-    // Operators End
-    //
+    // </editor-fold>
 
-    //
-    // Conversion Operators Begin
-    //
+    // <editor-fold desc="Conversion Operators">
 
     /**
      * Converts this {@link Publisher} to a {@link Single}.
@@ -3225,9 +3165,7 @@ public abstract class Publisher<T> {
         return new PublisherAsBlockingIterable<>(this, queueCapacityHint);
     }
 
-    //
-    // Conversion Operators End
-    //
+    // </editor-fold>
 
     /**
      * A internal subscribe method similar to {@link PublisherSource#subscribe(Subscriber)} which can be used by
@@ -3248,9 +3186,7 @@ public abstract class Publisher<T> {
      */
     protected abstract void handleSubscribe(Subscriber<? super T> subscriber);
 
-    //
-    // Static Utility Methods Begin
-    //
+    // <editor-fold desc="Static Utility Methods">
 
     /**
      * Creates a new {@link Publisher} that emits {@code value} to its {@link Subscriber} and then
@@ -3500,13 +3436,9 @@ public abstract class Publisher<T> {
         return new PublisherDefer<>(publisherSupplier);
     }
 
-    //
-    // Static Utility Methods End
-    //
+    // </editor-fold>
 
-    //
-    // Internal Methods Begin
-    //
+    // <editor-fold  desc="Internal Methods">
 
     /**
      * Subscribes to this {@link Single} and shares the current context.
@@ -3579,6 +3511,8 @@ public abstract class Publisher<T> {
         }
     }
 
+    // </editor-fold>
+
     /**
      * Returns the {@link Executor} used for this {@link Publisher}.
      *
@@ -3587,8 +3521,4 @@ public abstract class Publisher<T> {
     Executor executor() {
         return immediate();
     }
-
-    //
-    // Internal Methods End
-    //
 }

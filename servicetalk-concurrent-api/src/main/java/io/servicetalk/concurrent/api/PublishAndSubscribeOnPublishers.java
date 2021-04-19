@@ -17,8 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.PublisherSource.Subscriber;
 
-import java.util.Objects;
-
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -41,24 +39,12 @@ final class PublishAndSubscribeOnPublishers {
         return original.executor() == executor ? original : new PublishAndSubscribeOn<>(executor, original);
     }
 
-    static <T> Publisher<T> publishAndSubscribeOnOverride(Publisher<T> original, Executor executor) {
-        return original.executor() == executor ? original : new PublishAndSubscribeOnOverride<>(original, executor);
-    }
-
     static <T> Publisher<T> publishOn(Publisher<T> original, Executor executor) {
         return original.executor() == executor ? original : new PublishOn<>(executor, original);
     }
 
-    static <T> Publisher<T> publishOnOverride(Publisher<T> original, Executor executor) {
-        return original.executor() == executor ? original : new PublishOnOverride<>(original, executor);
-    }
-
     static <T> Publisher<T> subscribeOn(Publisher<T> original, Executor executor) {
         return original.executor() == executor ? original : new SubscribeOn<>(executor, original);
-    }
-
-    static <T> Publisher<T> subscribeOnOverride(Publisher<T> original, Executor executor) {
-        return original.executor() == executor ? original : new SubscribeOnOverride<>(original, executor);
     }
 
     private static final class PublishAndSubscribeOn<T> extends AbstractNoHandleSubscribePublisher<T> {
@@ -84,28 +70,10 @@ final class PublishAndSubscribeOnPublishers {
             // they hit this operator.
             original.subscribeWithSharedContext(contextProvider.wrapPublisherSubscriber(subscriber, contextMap));
         }
-    }
-
-    /**
-     * This operator is to make sure that we override the {@link Executor} for the entire execution chain. This is the
-     * normal mode of operation if we create a {@link Publisher} with an {@link Executor}, i.e. all operators behave
-     * the same way.
-     * Hence, we simply use {@link AbstractSynchronousPublisherOperator} which does not do any extra offloading, it just
-     * overrides the {@link Executor} that will be used to do the offloading.
-     */
-    private static final class PublishAndSubscribeOnOverride<T> extends AbstractSynchronousPublisherOperator<T, T> {
-        private final Executor executor;
-
-        PublishAndSubscribeOnOverride(final Publisher<T> original, final Executor executor) {
-            super(original);
-            this.executor = Objects.requireNonNull(executor);
-        }
 
         @Override
-        public Subscriber<? super T> apply(final Subscriber<? super T> subscriber) {
-            // We are using AbstractSynchronousPublisherOperator just to override the Executor. We do not intend to
-            // do any extra offloading that is done by a regular Publisher created with an Executor.
-            return subscriber;
+        public Executor executor() {
+            return executor;
         }
     }
 
@@ -129,28 +97,10 @@ final class PublishAndSubscribeOnPublishers {
             // they hit this operator.
             original.subscribeWithSharedContext(contextProvider.wrapPublisherSubscriber(subscriber, contextMap));
         }
-    }
-
-    /**
-     * This operator is to make sure that we override the {@link Executor} for the entire execution chain. This is the
-     * normal mode of operation if we create a {@link Publisher} with an {@link Executor}, i.e. all operators behave the
-     * same way.
-     * Hence, we simply use {@link AbstractSynchronousPublisherOperator} which does not do any extra offloading, it just
-     * overrides the {@link Executor} that will be used to do the offloading.
-     */
-    private static final class PublishOnOverride<T> extends AbstractSynchronousPublisherOperator<T, T> {
-        final Executor executor;
-
-        PublishOnOverride(final Publisher<T> original, final Executor executor) {
-            super(original);
-            this.executor = executor;
-        }
 
         @Override
-        public Subscriber<? super T> apply(final Subscriber<? super T> subscriber) {
-            // We are using AbstractSynchronousPublisherOperator just to override the Executor. We do not intend to
-            // do any extra offloading that is done by a regular Publisher created with an Executor.
-            return subscriber;
+        public Executor executor() {
+            return executor;
         }
     }
 
@@ -177,28 +127,10 @@ final class PublishAndSubscribeOnPublishers {
             // they hit this operator.
             original.subscribeWithSharedContext(subscriber);
         }
-    }
-
-    /**
-     * This operator is to make sure that we override the {@link Executor} for the entire execution chain. This is the
-     * normal mode of operation if we create a {@link Publisher} with an {@link Executor}, i.e. all operators behave the
-     * same way.
-     * Hence, we simply use {@link AbstractSynchronousPublisherOperator} which does not do any extra offloading, it just
-     * overrides the Executor that will be used to do the offloading.
-     */
-    private static final class SubscribeOnOverride<T> extends AbstractSynchronousPublisherOperator<T, T> {
-        final Executor executor;
-
-        SubscribeOnOverride(final Publisher<T> original, final Executor executor) {
-            super(original);
-            this.executor = executor;
-        }
 
         @Override
-        public Subscriber<? super T> apply(final Subscriber<? super T> subscriber) {
-            // We are using AbstractSynchronousPublisherOperator just to override the Executor. We do not intend to
-            // do any extra offloading that is done by a regular Publisher created with an Executor.
-            return subscriber;
+        public Executor executor() {
+            return executor;
         }
     }
 }
