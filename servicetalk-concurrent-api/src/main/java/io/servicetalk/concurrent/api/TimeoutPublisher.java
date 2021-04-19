@@ -20,6 +20,9 @@ import io.servicetalk.concurrent.internal.ConcurrentSubscription;
 import io.servicetalk.concurrent.internal.ConcurrentTerminalSubscriber;
 import io.servicetalk.concurrent.internal.SignalOffloader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
@@ -44,6 +47,8 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * @param <T> Type of items
  */
 final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimeoutPublisher.class);
+
     private final Publisher<T> original;
     private final io.servicetalk.concurrent.Executor timeoutExecutor;
     /**
@@ -280,6 +285,7 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
         }
 
         private void processTimeout(Throwable cause) {
+            LOGGER.debug("timeout", cause);
             final Subscription subscription = subscriptionUpdater.getAndSet(this, EMPTY_SUBSCRIPTION);
             // The timer is started before onSubscribe so the subscription may actually be null at this time.
             if (subscription != null) {
@@ -303,6 +309,7 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
         private static <X> void handleConstructorException(TimeoutSubscriber<X> s, SignalOffloader offloader,
                                                            AsyncContextMap contextMap,
                                                            AsyncContextProvider contextProvider, Throwable cause) {
+            LOGGER.debug("register timeout failure", cause);
             // We must set local state so there are no further interactions with Subscriber in the future.
             s.timerCancellable = LOCAL_IGNORE_CANCEL;
             s.subscription = EMPTY_SUBSCRIPTION;

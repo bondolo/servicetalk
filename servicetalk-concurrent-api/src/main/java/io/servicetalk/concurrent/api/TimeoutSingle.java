@@ -18,6 +18,9 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.Cancellable;
 import io.servicetalk.concurrent.internal.SignalOffloader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -32,6 +35,8 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.atomic.AtomicReferenceFieldUpdater.newUpdater;
 
 final class TimeoutSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimeoutSingle.class);
+
     private final Single<T> original;
     private final io.servicetalk.concurrent.Executor timeoutExecutor;
     private final long durationNs;
@@ -63,7 +68,7 @@ final class TimeoutSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
                 offloader, contextMap, contextProvider);
     }
 
-    private static final class TimeoutSubscriber<X> implements Subscriber<X>, Cancellable, Runnable {
+    private static final class TimeoutSubscriber<X> implements Subscriber<X>, Cancellable {
         /**
          * Create a local instance because the instance is used as part of the local state machine.
          */
@@ -108,8 +113,9 @@ final class TimeoutSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
                 // it enabled for the Subscriber, however the user explicitly specifies the Executor with this operator
                 // so they can wrap the Executor in this case.
                 localTimerCancellable = requireNonNull(
-                        parent.timeoutExecutor.schedule(s, parent.durationNs, NANOSECONDS));
+                        parent.timeoutExecutor.schedule(s::timerFires, parent.durationNs, NANOSECONDS));
             } catch (Throwable cause) {
+                LOGGER.debug("register timeout failure", cause);
                 localTimerCancellable = IGNORE_CANCEL;
                 // We must set this to ignore so there are no further interactions with Subscriber in the future.
                 s.cancellable = LOCAL_IGNORE_CANCEL;
@@ -171,8 +177,7 @@ final class TimeoutSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
             }
         }
 
-        @Override
-        public void run() {
+        private void timerFires() {
             Cancellable oldCancellable = cancellableUpdater.getAndSet(this, LOCAL_IGNORE_CANCEL);
             if (oldCancellable != LOCAL_IGNORE_CANCEL) {
                 // The timeout may be running on a different Executor than the original async source. If that is the
@@ -190,13 +195,17 @@ final class TimeoutSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
                     // know that the call to target.onSubscribe completed so we don't interact with the Subscriber
                     // concurrently.
                     if (subscriberStateUpdater.getAndSet(this, STATE_TIMED_OUT_ERROR) == STATE_ON_SUBSCRIBE_DONE) {
-                        offloadedTarget.onError(newTimeoutException());
+                        TimeoutException timeout = newTimeoutException();
+                        LOGGER.debug("timeout", timeout);
+                        offloadedTarget.onError(timeout);
                     }
                 } else {
                     // If there is no Cancellable, that means this.onSubscribe wasn't called before the timeout. In this
                     // case there is no risk of concurrent invocation on target because we won't invoke
                     // target.onSubscribe from this.onSubscribe.
-                    deliverErrorFromSource(offloadedTarget, newTimeoutException());
+                    TimeoutException timeout = newTimeoutException();
+                    LOGGER.debug("timeout", timeout);
+                    deliverErrorFromSource(offloadedTarget, timeout);
                 }
             }
         }

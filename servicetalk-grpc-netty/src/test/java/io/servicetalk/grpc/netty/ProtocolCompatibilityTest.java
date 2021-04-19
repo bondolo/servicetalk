@@ -15,6 +15,7 @@
  */
 package io.servicetalk.grpc.netty;
 
+import io.servicetalk.client.api.ClientGroup;
 import io.servicetalk.concurrent.BlockingIterable;
 import io.servicetalk.concurrent.PublisherSource;
 import io.servicetalk.concurrent.SingleSource.Processor;
@@ -43,13 +44,19 @@ import io.servicetalk.grpc.netty.CompatProto.Compat.ServerStreamingCallMetadata;
 import io.servicetalk.grpc.netty.CompatProto.Compat.ServiceFactory;
 import io.servicetalk.grpc.netty.CompatProto.RequestContainer.CompatRequest;
 import io.servicetalk.grpc.netty.CompatProto.ResponseContainer.CompatResponse;
+import io.servicetalk.http.api.HttpRequestMetaData;
 import io.servicetalk.http.api.HttpServiceContext;
+import io.servicetalk.http.api.StreamingHttpClient;
 import io.servicetalk.http.api.StreamingHttpRequest;
 import io.servicetalk.http.api.StreamingHttpResponse;
 import io.servicetalk.http.api.StreamingHttpResponseFactory;
+import io.servicetalk.http.api.StreamingHttpService;
 import io.servicetalk.http.api.StreamingHttpServiceFilter;
+import io.servicetalk.http.netty.HttpClients;
+import io.servicetalk.http.netty.HttpServers;
 import io.servicetalk.test.resources.DefaultTestCerts;
 import io.servicetalk.transport.api.ClientSslConfigBuilder;
+import io.servicetalk.transport.api.HostAndPort;
 import io.servicetalk.transport.api.ServerContext;
 import io.servicetalk.transport.api.ServerSslConfigBuilder;
 
@@ -58,9 +65,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Codec;
 import io.grpc.Compressor;
 import io.grpc.CompressorRegistry;
+import io.grpc.Context;
 import io.grpc.Decompressor;
 import io.grpc.DecompressorRegistry;
 import io.grpc.ManagedChannel;
+import io.grpc.Metadata;
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -71,7 +80,7 @@ import io.grpc.protobuf.StatusProto;
 import io.grpc.stub.StreamObserver;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import org.junit.Ignore;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
@@ -86,9 +95,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
@@ -102,6 +113,7 @@ import static io.servicetalk.encoding.api.Identity.identity;
 import static io.servicetalk.encoding.netty.ContentCodings.gzipDefault;
 import static io.servicetalk.grpc.api.GrpcExecutionStrategies.defaultStrategy;
 import static io.servicetalk.grpc.api.GrpcExecutionStrategies.noOffloadsStrategy;
+import static io.servicetalk.http.netty.HttpProtocolConfigs.h2Default;
 import static io.servicetalk.test.resources.DefaultTestCerts.loadServerKey;
 import static io.servicetalk.test.resources.DefaultTestCerts.loadServerPem;
 import static io.servicetalk.test.resources.DefaultTestCerts.serverPemHostname;
@@ -117,6 +129,9 @@ import static org.junit.Assert.fail;
 
 @RunWith(Theories.class)
 public class ProtocolCompatibilityTest {
+    private static final Metadata.Key<String> GRPC_TIMEOUT_HEADER =
+            Metadata.Key.of("grpc-timeout", Metadata.ASCII_STRING_MARSHALLER);
+
     private interface TestServerContext extends AutoCloseable {
         SocketAddress listenAddress();
 
@@ -158,6 +173,10 @@ public class ProtocolCompatibilityTest {
 
     private static final String CUSTOM_ERROR_MESSAGE = "custom error message";
 
+    /**
+     * Describes location and type of error response that will be injected
+     * by the server.
+     */
     private enum ErrorMode {
         NONE,
         SIMPLE,
@@ -167,20 +186,35 @@ public class ProtocolCompatibilityTest {
         STATUS,
         STATUS_IN_SERVER_FILTER,
         STATUS_IN_SERVICE_FILTER,
-        STATUS_IN_RESPONSE
+        STATUS_IN_RESPONSE,
+        // pseudo error -- induces delay to allow natural timeout to occur
+        DELAY
     }
 
     @DataPoints("ssl")
-    public static boolean[] ssl = {false, true};
+    public static final boolean[] ssl = {false, true};
 
     @DataPoints("streaming")
-    public static boolean[] streaming = {false, true};
+    public static final boolean[] streaming = {false, true};
 
     @DataPoints("compression")
-    public static String[] compression = {"gzip", "identity", null};
+    public static final String[] compression = {"gzip", "identity", null};
 
     @Rule
     public final Timeout timeout = new ServiceTalkTestTimeout();
+
+    H2StreamingProxy proxyServer;
+
+    @After
+    public void stopProxy() throws Exception {
+        if (null != proxyServer) {
+            try {
+                proxyServer.close();
+            } finally {
+                proxyServer = null;
+            }
+        }
+    }
 
     // <editor-fold desc="Theories">
     @Theory
@@ -516,10 +550,9 @@ public class ProtocolCompatibilityTest {
     }
 
     @Theory
-    @Ignore("https://github.com/apple/servicetalk/issues/1489")
     public void grpcJavaToGrpcJavaTimeout(@FromDataPoints("ssl") final boolean ssl,
-                                   @FromDataPoints("streaming") final boolean streaming,
-                                   @FromDataPoints("compression") final String compression) throws Exception {
+                                          @FromDataPoints("streaming") final boolean streaming,
+                                          @FromDataPoints("compression") final String compression) throws Exception {
         Duration timeout = Duration.ofNanos(1);
         final TestServerContext server = grpcJavaServer(ErrorMode.NONE, ssl, compression);
         final CompatClient client = grpcJavaClient(server.listenAddress(), compression, ssl, timeout);
@@ -527,21 +560,31 @@ public class ProtocolCompatibilityTest {
     }
 
     @Theory
-    @Ignore("https://github.com/apple/servicetalk/issues/1489")
-    public void serviceTalkToGrpcJavaTimeout(@FromDataPoints("ssl") final boolean ssl,
-                                      @FromDataPoints("streaming") final boolean streaming,
-                                      @FromDataPoints("compression") final String compression) throws Exception {
+    public void serviceTalkToGrpcJavaClientTimeout(@FromDataPoints("ssl") final boolean ssl,
+                                                   @FromDataPoints("streaming") final boolean streaming,
+                                                   @FromDataPoints("compression") final String compression) throws Exception {
         Duration timeout = Duration.ofNanos(1);
+        final TestServerContext server = grpcJavaServer(ErrorMode.DELAY, ssl, compression);
+        final CompatClient client = serviceTalkClient(
+                server.listenAddress(),  this::removeTimeoutHeader, ssl, compression, timeout);
+        testGrpcError(client, server, false, streaming, compression, GrpcStatusCode.DEADLINE_EXCEEDED, null);
+    }
+
+    @Theory
+    public void serviceTalkToGrpcJavaServerTimeout(@FromDataPoints("ssl") final boolean ssl,
+                                                   @FromDataPoints("streaming") final boolean streaming,
+                                                   @FromDataPoints("compression") final String compression)
+            throws Exception {
+        Duration timeout = Duration.ofHours(1);
         final TestServerContext server = grpcJavaServer(ErrorMode.NONE, ssl, compression);
         final CompatClient client = serviceTalkClient(server.listenAddress(), ssl, compression, timeout);
         testGrpcError(client, server, false, streaming, compression, GrpcStatusCode.DEADLINE_EXCEEDED, null);
     }
 
     @Theory
-    @Ignore("https://github.com/apple/servicetalk/issues/1489")
     public void grpcJavaToServiceTalkTimeout(@FromDataPoints("ssl") final boolean ssl,
-                                      @FromDataPoints("streaming") final boolean streaming,
-                                      @FromDataPoints("compression") final String compression) throws Exception {
+                                             @FromDataPoints("streaming") final boolean streaming,
+                                             @FromDataPoints("compression") final String compression) throws Exception {
         Duration timeout = Duration.ofNanos(1);
         final TestServerContext server = serviceTalkServer(ErrorMode.NONE, ssl, compression, null);
         final CompatClient client = grpcJavaClient(server.listenAddress(), compression, ssl, timeout);
@@ -549,10 +592,9 @@ public class ProtocolCompatibilityTest {
     }
 
     @Theory
-    @Ignore("https://github.com/apple/servicetalk/issues/1489")
     public void serviceTalkToServiceTalkTimeout(@FromDataPoints("ssl") final boolean ssl,
-                                         @FromDataPoints("streaming") final boolean streaming,
-                                         @FromDataPoints("compression") final String compression) throws Exception {
+                                                @FromDataPoints("streaming") final boolean streaming,
+                                                @FromDataPoints("compression") final String compression) throws Exception {
         Duration timeout = Duration.ofNanos(1);
         final TestServerContext server = serviceTalkServer(ErrorMode.NONE, ssl, compression, null);
         final CompatClient client = serviceTalkClient(server.listenAddress(), ssl, compression, timeout);
@@ -860,7 +902,7 @@ public class ProtocolCompatibilityTest {
                 .build();
     }
 
-    private static void closeAll(final AutoCloseable... acs) {
+    private static void closeAll(final AutoCloseable... acs) throws RuntimeException {
         RuntimeException re = null;
 
         for (final AutoCloseable ac : acs) {
@@ -887,11 +929,29 @@ public class ProtocolCompatibilityTest {
                 .build();
     }
 
-    private static CompatClient serviceTalkClient(final SocketAddress serverAddress, final boolean ssl,
+    private CompatClient serviceTalkClient(final SocketAddress serverAddress,
+                                                  final boolean ssl,
                                                   @Nullable final String compression,
-                                                  @Nullable final Duration timeout) {
+                                                  @Nullable final Duration timeout)  throws Exception {
+        return serviceTalkClient(serverAddress, null, ssl, compression, timeout);
+
+    }
+    private CompatClient serviceTalkClient(final SocketAddress serverAddress,
+                                                  @Nullable Consumer<HttpRequestMetaData> headersMutators,
+                                                  final boolean ssl,
+                                                  @Nullable final String compression,
+                                                  @Nullable final Duration timeout) throws Exception {
+
+        if (null != headersMutators) {
+            proxyServer = new H2StreamingProxy(headersMutators, serverAddress);
+        }
+
         final GrpcClientBuilder<InetSocketAddress, InetSocketAddress> builder =
-                GrpcClients.forResolvedAddress((InetSocketAddress) serverAddress);
+                (null != proxyServer) ?
+                        GrpcClients.forHttpClientBuilder(HttpClients.forResolvedAddressViaProxy(
+                                (InetSocketAddress) serverAddress,
+                                (InetSocketAddress) proxyServer.proxyAddress()))
+                : GrpcClients.forResolvedAddress((InetSocketAddress) serverAddress);
         if (ssl) {
             builder.sslConfig(new ClientSslConfigBuilder(DefaultTestCerts::loadServerCAPem)
                     .peerHost(serverPemHostname()).build());
@@ -1017,6 +1077,14 @@ public class ProtocolCompatibilityTest {
             throwGrpcStatusException();
         } else if (errorMode == ErrorMode.STATUS) {
             throwGrpcStatusExceptionWithStatus();
+        } else if (errorMode == ErrorMode.DELAY) {
+            try {
+                // Sleep for 5 seconds for asynchronous timeout
+                SECONDS.sleep(5);
+            } catch (InterruptedException woken) {
+                // act like nothing happened.
+                Thread.interrupted();
+            }
         }
     }
 
@@ -1072,6 +1140,14 @@ public class ProtocolCompatibilityTest {
                     throwGrpcStatusException();
                 } else if (errorMode == ErrorMode.STATUS_IN_RESPONSE) {
                     throwGrpcStatusExceptionWithStatus();
+                } else if (errorMode == ErrorMode.DELAY) {
+                    try {
+                        // Sleep for 5 seconds for asynchronous timeout
+                        SECONDS.sleep(5);
+                    } catch (InterruptedException woken) {
+                        // act like nothing happened.
+                        Thread.interrupted();
+                    }
                 }
                 return computeResponse(value);
             }
@@ -1129,13 +1205,31 @@ public class ProtocolCompatibilityTest {
                 .executionStrategy(strategy)
                 .listenAndAwait(serviceFactory);
         return TestServerContext.fromServiceTalkServerContext(serverContext);
+
     }
 
-    // Wrap grpc client in our client interface to simplify test code
-    private static CompatClient grpcJavaClient(final SocketAddress address, @Nullable final String compression,
+    private CompatClient grpcJavaClient(final SocketAddress serverAddress,
+                                               @Nullable final String compression,
                                                final boolean ssl,
                                                @Nullable Duration timeout) throws Exception {
-        final NettyChannelBuilder builder = NettyChannelBuilder.forAddress(address);
+        return grpcJavaClient(serverAddress, null, compression, ssl, timeout);
+    }
+    // Wrap grpc client in our client interface to simplify test code
+    private CompatClient grpcJavaClient(final SocketAddress serverAddress,
+                                               @Nullable final Consumer<HttpRequestMetaData> mutateHeaders,
+                                               @Nullable final String compression,
+                                               final boolean ssl,
+                                               @Nullable Duration timeout) throws Exception {
+
+        NettyChannelBuilder builder;
+        if (null != mutateHeaders) {
+            // send the request via proxy to mutate the headers
+            proxyServer = new H2StreamingProxy(mutateHeaders, serverAddress);
+
+            builder = NettyChannelBuilder.forAddress(proxyServer.proxyAddress());
+        } else {
+            builder = NettyChannelBuilder.forAddress(serverAddress);
+        }
 
         if (ssl) {
             final SslContext context = GrpcSslContexts.forClient()
@@ -1157,6 +1251,8 @@ public class ProtocolCompatibilityTest {
         if (null != timeout) {
             stub = stub.withDeadlineAfter(timeout.toNanos(), TimeUnit.NANOSECONDS);
         }
+
+
 
         final CompatGrpc.CompatStub finalStub = stub;
         return new CompatClient() {
@@ -1414,12 +1510,77 @@ public class ProtocolCompatibilityTest {
                         }
                         if (errorMode == ErrorMode.STATUS) {
                             throw StatusProto.toStatusException(newStatus());
+                        } else if (errorMode == ErrorMode.DELAY) {
+                            try {
+                                // Sleep for 5 seconds for asynchronous timeout
+                                SECONDS.sleep(5);
+                            } catch (InterruptedException woken) {
+                                // act like nothing happened.
+                                Thread.interrupted();
+                            }
+
+                            Context current = Context.current();
+                            if (current.isCancelled()) {
+                                throw Status.CANCELLED.asException();
+                            }
                         }
+
                         return computeResponse(value);
                     }
                 })
                 .build().start();
 
         return TestServerContext.fromGrpcJavaServer(server);
+    }
+
+    private static class H2StreamingProxy implements AutoCloseable {
+
+        private final ServerContext proxyServer;
+
+        H2StreamingProxy(Consumer<HttpRequestMetaData> mutateHeaders, SocketAddress serverAddress) throws Exception {
+            Objects.requireNonNull(mutateHeaders);
+            HostAndPort server = HostAndPort.of(
+                    Objects.requireNonNull((InetSocketAddress) serverAddress, "serverAddress"));
+            proxyServer = HttpServers.forPort(0)
+                    .protocols(h2Default())
+                    .listenStreamingAndAwait(new StreamingHttpService() {
+                        private final ClientGroup<HostAndPort, StreamingHttpClient> clientMap = ClientGroup.from(
+                                hostPort -> HttpClients.forSingleAddress(hostPort)
+                                        .protocols(h2Default())
+                                        .buildStreaming());
+
+                        @Override
+                        public Single<StreamingHttpResponse> handle(final HttpServiceContext ctx,
+                                                                    final StreamingHttpRequest request,
+                                                                    final StreamingHttpResponseFactory responseFactory) {
+                            mutateHeaders.accept(request);
+
+                            return clientMap.get(server).request(request);
+                        }
+
+                        @Override
+                        public Completable closeAsync() {
+                            return clientMap.closeAsync();
+                        }
+
+                        @Override
+                        public Completable closeAsyncGracefully() {
+                            return clientMap.closeAsyncGracefully();
+                        }
+                    });
+        }
+
+        @Override
+        public void close() throws Exception {
+            proxyServer.closeGracefully();
+        }
+
+        public SocketAddress proxyAddress() {
+            return proxyServer.listenAddress();
+        }
+    }
+
+    public void removeTimeoutHeader(HttpRequestMetaData request) {
+        request.headers().remove("grpc-timeout");
     }
 }
