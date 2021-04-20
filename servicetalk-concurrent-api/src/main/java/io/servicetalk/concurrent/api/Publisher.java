@@ -248,7 +248,7 @@ public abstract class Publisher<T> {
      */
     public final <R> Publisher<R> scanWithLifetime(
             Supplier<? extends ScanWithLifetimeMapper<? super T, ? extends R>> mapperSupplier) {
-        return new ScanWithLifetimePublisher<>(this, mapperSupplier, executor());
+        return new ScanWithLifetimePublisher<>(this, mapperSupplier);
     }
 
     /**

@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.internal.SignalOffloader;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,18 +32,17 @@ final class ScanWithLifetimePublisher<T, R> extends AbstractNoHandleSubscribePub
     private final Supplier<? extends ScanWithLifetimeMapper<? super T, ? extends R>> mapperSupplier;
 
     ScanWithLifetimePublisher(Publisher<T> original,
-                              Supplier<? extends ScanWithLifetimeMapper<? super T, ? extends R>> mapperSupplier,
-                              Executor executor) {
-        super(executor, true);
+                              Supplier<? extends ScanWithLifetimeMapper<? super T, ? extends R>> mapperSupplier) {
+        super(true);
         this.mapperSupplier = requireNonNull(mapperSupplier);
         this.original = original;
     }
 
     @Override
-    void handleSubscribe(final Subscriber<? super R> subscriber, final SignalOffloader signalOffloader,
+    void handleSubscribe(final Subscriber<? super R> subscriber,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-        original.delegateSubscribe(new ScanWithLifetimeSubscriber<>(subscriber, mapperSupplier.get(), signalOffloader,
-                contextMap, contextProvider), signalOffloader, contextMap, contextProvider);
+        original.delegateSubscribe(new ScanWithLifetimeSubscriber<>(subscriber, mapperSupplier.get(),
+                contextMap, contextProvider), contextMap, contextProvider);
     }
 
     /**
@@ -68,9 +65,9 @@ final class ScanWithLifetimePublisher<T, R> extends AbstractNoHandleSubscribePub
 
         ScanWithLifetimeSubscriber(final Subscriber<? super R> subscriber,
                                    final ScanWithLifetimeMapper<? super T, ? extends R> mapper,
-                                   final SignalOffloader signalOffloader, final AsyncContextMap contextMap,
+                                   final AsyncContextMap contextMap,
                                    final AsyncContextProvider contextProvider) {
-            super(subscriber, mapper, signalOffloader, contextMap, contextProvider);
+            super(subscriber, mapper, contextMap, contextProvider);
             this.mapper = mapper;
         }
 

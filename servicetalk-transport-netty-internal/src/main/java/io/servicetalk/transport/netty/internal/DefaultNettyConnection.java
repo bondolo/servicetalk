@@ -176,7 +176,7 @@ public final class DefaultNettyConnection<Read, Write> extends NettyChannelListe
                     // If we do offload subscribe, we will hold up a thread for the lifetime of the connection.
                     // As we do offload "publish" for "onClosing", we can avoid offloading of "onClose" as we know
                     // Subscriber end of CompletableProcessor (onClosing) will not block.
-                    .publishAndSubscribeOnOverride(immediate()))
+                    .publishAndSubscribeOn(immediate()))
                     .subscribe(onClosing);
         } else {
             onClosing = null;

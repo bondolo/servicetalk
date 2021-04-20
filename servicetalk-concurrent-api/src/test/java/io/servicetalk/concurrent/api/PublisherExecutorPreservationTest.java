@@ -29,7 +29,7 @@ public class PublisherExecutorPreservationTest {
 
     @BeforeEach
     public void setupPublisher() {
-        publisher = Publisher.<String>empty().publishAndSubscribeOnOverride(EXEC.executor());
+        publisher = Publisher.<String>empty().publishAndSubscribeOn(EXEC.executor());
     }
 
     @Test

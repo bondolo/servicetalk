@@ -50,21 +50,6 @@ public class PublishAndSubscribeOnTest extends AbstractPublishAndSubscribeOnTest
     }
 
     @Test
-    public void testPublishOnOverride() throws InterruptedException {
-        AtomicReferenceArray<Thread> capturedThreads =
-                setupAndSubscribe(Publisher::publishOnOverride, executorRule.executor());
-
-        assertThat("Unexpected threads for subscription and subscriber for original source.",
-                capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD),
-                not(capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD)));
-        assertThat("Unexpected threads for subscription and subscriber for offloaded source.",
-                capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD),
-                not(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
-        assertThat("Unexpected threads for original and offloaded source.",
-                capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD), is(capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD)));
-    }
-
-    @Test
     public void testSubscribeOnNoOverride() throws InterruptedException {
         AtomicReferenceArray<Thread> capturedThreads =
                 setupAndSubscribe(Publisher::subscribeOn, executorRule.executor());
@@ -77,22 +62,6 @@ public class PublishAndSubscribeOnTest extends AbstractPublishAndSubscribeOnTest
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD),
                 not(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
-    }
-
-    @Test
-    public void testSubscribeOnOverride() throws InterruptedException {
-        AtomicReferenceArray<Thread> capturedThreads =
-                setupAndSubscribe(Publisher::subscribeOnOverride, executorRule.executor());
-
-        assertThat("Unexpected threads for subscription and subscriber for original source.",
-                capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD),
-                not(capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD)));
-        assertThat("Unexpected threads for subscription and subscriber for offloaded source.",
-                capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD),
-                not(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
-        assertThat("Unexpected threads for original and offloaded source.",
-                capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD),
-                is(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
     }
 
     @Test
@@ -109,21 +78,5 @@ public class PublishAndSubscribeOnTest extends AbstractPublishAndSubscribeOnTest
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD),
                 not(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
-    }
-
-    @Test
-    public void testOverride() throws InterruptedException {
-        AtomicReferenceArray<Thread> capturedThreads =
-                setupAndSubscribe(Publisher::publishAndSubscribeOnOverride, executorRule.executor());
-
-        assertThat("Unexpected threads for subscription and subscriber for original source.",
-                capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD),
-                is(capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD)));
-        assertThat("Unexpected threads for subscription and subscriber for offloaded source.",
-                capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD),
-                is(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
-        assertThat("Unexpected threads for original and offloaded source.",
-                capturedThreads.get(ORIGINAL_SUBSCRIPTION_THREAD),
-                is(capturedThreads.get(OFFLOADED_SUBSCRIPTION_THREAD)));
     }
 }
