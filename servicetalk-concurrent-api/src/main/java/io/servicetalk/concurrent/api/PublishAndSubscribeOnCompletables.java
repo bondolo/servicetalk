@@ -102,7 +102,7 @@ final class PublishAndSubscribeOnCompletables {
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
             original.subscribeWithSharedContext(
-                            contextProvider.wrapCompletableSubscriber(subscriber, contextMap), contextProvider);
+                            contextProvider.wrapCompletableSubscriber(offloaded, contextMap), contextProvider);
         }
 
         @Override
@@ -110,6 +110,8 @@ final class PublishAndSubscribeOnCompletables {
             return executor;
         }
     }
+
+
 
     private static final class SubscribeOn extends AbstractNoHandleSubscribeCompletable {
         private final Completable original;

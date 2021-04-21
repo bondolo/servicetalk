@@ -37,6 +37,7 @@ import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.api.completable.AbstractPublishAndSubscribeOnTest.verifyCapturedThreads;
 import static java.lang.Long.MAX_VALUE;
 import static java.lang.Thread.currentThread;
+import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractPublishAndSubscribeOnTest {
 
@@ -58,13 +59,17 @@ public abstract class AbstractPublishAndSubscribeOnTest {
 
         Publisher<String> original = new PublisherWithExecutor<>(originalSourceExecutorRule.executor(),
                 from("Hello"))
-                .beforeOnNext(__ -> capturedThreads.set(ORIGINAL_SUBSCRIBER_THREAD, currentThread()))
-                .beforeRequest(__ -> capturedThreads.set(ORIGINAL_SUBSCRIPTION_THREAD, currentThread()));
+                .beforeOnNext(__ -> capturedThreads.updateAndGet(ORIGINAL_SUBSCRIBER_THREAD,
+                        AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread))
+                .beforeRequest(__ -> capturedThreads.updateAndGet(ORIGINAL_SUBSCRIPTION_THREAD,
+                        AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread));
 
         Publisher<String> offloaded = offloadingFunction.apply(original, executor);
 
-        toSource(offloaded.beforeOnNext(__ -> capturedThreads.set(OFFLOADED_SUBSCRIBER_THREAD, currentThread()))
-                .beforeRequest(__ -> capturedThreads.set(OFFLOADED_SUBSCRIPTION_THREAD, currentThread()))
+        toSource(offloaded.beforeOnNext(__ -> capturedThreads.updateAndGet(OFFLOADED_SUBSCRIBER_THREAD,
+                    AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread))
+                .beforeRequest(__ -> capturedThreads.updateAndGet(OFFLOADED_SUBSCRIPTION_THREAD,
+                        AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread))
                 .afterFinally(allDone::countDown))
                 .subscribe(new Subscriber<String>() {
                     @Override
@@ -94,5 +99,12 @@ public abstract class AbstractPublishAndSubscribeOnTest {
         verifyCapturedThreads(capturedThreads);
 
         return capturedThreads;
+    }
+
+    private static Thread checkAndSetCurrentThread(Thread currentValue) {
+        final Thread newValue = currentThread();
+        assertTrue("Attempt to set a different value. current:" + currentValue + " new:" + newValue,
+                null == currentValue || newValue == currentValue);
+        return newValue;
     }
 }

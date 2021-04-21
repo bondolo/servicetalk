@@ -32,7 +32,8 @@ public class PublishAndSubscribeOnTest extends AbstractPublishAndSubscribeOnTest
 
     @Test
     public void testPublishOnNoOverride() throws InterruptedException {
-        AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(c -> c.publishOn(executorRule.executor()));
+        AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(
+                c -> c.publishOn(executorRule.executor()));
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD), not(capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD)));
     }

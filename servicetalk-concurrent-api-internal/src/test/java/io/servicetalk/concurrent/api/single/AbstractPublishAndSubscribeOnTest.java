@@ -30,6 +30,7 @@ import java.util.function.Function;
 import static io.servicetalk.concurrent.api.Single.succeeded;
 import static io.servicetalk.concurrent.api.completable.AbstractPublishAndSubscribeOnTest.verifyCapturedThreads;
 import static java.lang.Thread.currentThread;
+import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractPublishAndSubscribeOnTest {
 
@@ -47,12 +48,14 @@ public abstract class AbstractPublishAndSubscribeOnTest {
         AtomicReferenceArray<Thread> capturedThreads = new AtomicReferenceArray<>(2);
 
         Single<String> original = new SingleWithExecutor<>(originalSourceExecutorRule.executor(), succeeded("Hello"))
-                .beforeOnSuccess(__ -> capturedThreads.set(ORIGINAL_SUBSCRIBER_THREAD, currentThread()));
+                .beforeOnSuccess(__ -> capturedThreads.updateAndGet(ORIGINAL_SUBSCRIBER_THREAD,
+                        AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread));
 
         Single<String> offloaded = offloadingFunction.apply(original);
 
         offloaded.afterFinally(allDone::countDown)
-                .beforeOnSuccess(__ -> capturedThreads.set(OFFLOADED_SUBSCRIBER_THREAD, currentThread()))
+                .beforeOnSuccess(__ -> capturedThreads.updateAndGet(OFFLOADED_SUBSCRIBER_THREAD,
+                        AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread))
                 .subscribe(val -> { });
         allDone.await();
 
@@ -68,17 +71,26 @@ public abstract class AbstractPublishAndSubscribeOnTest {
         Single<String> original = new SingleWithExecutor<>(originalSourceExecutorRule.executor(),
                 Single.<String>never())
                 .afterCancel(() -> {
-                    capturedThreads.set(ORIGINAL_SUBSCRIBER_THREAD, currentThread());
+                    capturedThreads.updateAndGet(ORIGINAL_SUBSCRIBER_THREAD,
+                            AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread);
                     allDone.countDown();
                 });
 
         Single<String> offloaded = offloadingFunction.apply(original);
 
-        offloaded.beforeCancel(() -> capturedThreads.set(OFFLOADED_SUBSCRIBER_THREAD, currentThread()))
+        offloaded.beforeCancel(() -> capturedThreads.updateAndGet(OFFLOADED_SUBSCRIBER_THREAD,
+                AbstractPublishAndSubscribeOnTest::checkAndSetCurrentThread))
                 .subscribe(val -> { }).cancel();
         allDone.await();
 
         verifyCapturedThreads(capturedThreads);
         return capturedThreads;
+    }
+
+    private static Thread checkAndSetCurrentThread(Thread currentValue) {
+        final Thread newValue = currentThread();
+        assertTrue("Attempt to set a different value. current:" + currentValue + " new:" + newValue,
+                null == currentValue || newValue == currentValue);
+        return newValue;
     }
 }
