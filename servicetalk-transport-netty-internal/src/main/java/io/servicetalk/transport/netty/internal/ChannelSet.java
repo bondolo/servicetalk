@@ -156,12 +156,12 @@ public final class ChannelSet implements ListenableAsyncCloseable {
                         closeable.merge(new AsyncCloseable() {
                             @Override
                             public Completable closeAsync() {
-                                return channelCloseable.closeAsync().publishOnOverride(immediate());
+                                return channelCloseable.closeAsync().publishOn(immediate());
                             }
 
                             @Override
                             public Completable closeAsyncGracefully() {
-                                return channelCloseable.closeAsyncGracefully().publishOnOverride(immediate());
+                                return channelCloseable.closeAsyncGracefully().publishOn(immediate());
                             }
                         });
                     } else {

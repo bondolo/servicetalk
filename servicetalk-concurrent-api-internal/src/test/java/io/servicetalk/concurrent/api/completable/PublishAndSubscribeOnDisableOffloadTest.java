@@ -27,14 +27,14 @@ public class PublishAndSubscribeOnDisableOffloadTest extends AbstractPublishAndS
 
     @Test
     public void testPublishOnDisable() throws InterruptedException {
-        AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(c -> c.publishOnOverride(immediate()));
+        AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(c -> c.publishOn(immediate()));
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD), is(capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD)));
     }
 
     @Test
     public void testSubscribeOnDisable() throws InterruptedException {
-        AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(c -> c.subscribeOnOverride(immediate()));
+        AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(c -> c.subscribeOn(immediate()));
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD), is(capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD)));
     }
@@ -42,7 +42,7 @@ public class PublishAndSubscribeOnDisableOffloadTest extends AbstractPublishAndS
     @Test
     public void testPublishAndSubscribeOnDisable() throws InterruptedException {
         AtomicReferenceArray<Thread> capturedThreads = setupAndSubscribe(
-                c -> c.publishAndSubscribeOnOverride(immediate()));
+                c -> c.publishAndSubscribeOn(immediate()));
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD), is(capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD)));
     }
@@ -50,7 +50,7 @@ public class PublishAndSubscribeOnDisableOffloadTest extends AbstractPublishAndS
     @Test
     public void testPublishAndSubscribeOnDisableWithCancel() throws InterruptedException {
         AtomicReferenceArray<Thread> capturedThreads = setupForCancelAndSubscribe(
-                c -> c.publishAndSubscribeOnOverride(immediate()));
+                c -> c.publishAndSubscribeOn(immediate()));
         assertThat("Unexpected threads for original and offloaded source.",
                 capturedThreads.get(ORIGINAL_SUBSCRIBER_THREAD), is(capturedThreads.get(OFFLOADED_SUBSCRIBER_THREAD)));
     }

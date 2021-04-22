@@ -33,7 +33,7 @@ public class CompletableExecutorPreservationTest {
 
     @BeforeEach
     public void setupCompletable() {
-        completable = completed().publishAndSubscribeOnOverride(EXEC.executor());
+        completable = completed().publishAndSubscribeOn(EXEC.executor());
     }
 
     @Test

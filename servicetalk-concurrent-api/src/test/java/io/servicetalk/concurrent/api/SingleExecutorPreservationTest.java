@@ -31,7 +31,7 @@ public class SingleExecutorPreservationTest {
 
     @BeforeEach
     public void setupSingle() {
-        single = Single.<String>never().publishAndSubscribeOnOverride(EXEC.executor());
+        single = Single.<String>never().publishAndSubscribeOn(EXEC.executor());
     }
 
     @Test
