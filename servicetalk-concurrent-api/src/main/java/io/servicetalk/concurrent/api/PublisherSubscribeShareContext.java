@@ -21,7 +21,7 @@ final class PublisherSubscribeShareContext<T> extends AbstractNoHandleSubscribeP
     private final Publisher<T> original;
 
     PublisherSubscribeShareContext(final Publisher<T> original) {
-        super(original.executor(), true);
+        super(true);
         this.original = original;
     }
 

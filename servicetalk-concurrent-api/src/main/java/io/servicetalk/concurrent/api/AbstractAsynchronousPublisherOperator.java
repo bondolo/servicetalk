@@ -35,8 +35,7 @@ abstract class AbstractAsynchronousPublisherOperator<T, R> extends AbstractNoHan
 
     private final Publisher<T> original;
 
-    AbstractAsynchronousPublisherOperator(Publisher<T> original, Executor executor) {
-        super(executor);
+    AbstractAsynchronousPublisherOperator(Publisher<T> original) {
         this.original = requireNonNull(original);
     }
 
@@ -62,5 +61,10 @@ abstract class AbstractAsynchronousPublisherOperator<T, R> extends AbstractNoHan
         // and restore the AsyncContext before/after the asynchronous boundary.
         final Subscriber<? super T> upstreamSubscriber = signalOffloader.offloadSubscription(apply(operatorSubscriber));
         original.delegateSubscribe(upstreamSubscriber, signalOffloader, contextMap, contextProvider);
+    }
+
+    @Override
+    public Executor executor() {
+        return original.executor();
     }
 }

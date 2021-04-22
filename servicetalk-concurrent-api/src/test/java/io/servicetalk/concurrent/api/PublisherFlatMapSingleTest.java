@@ -514,7 +514,7 @@ public class PublisherFlatMapSingleTest {
         }
         PublisherFlatMapSingle<Integer, String> pub = new PublisherFlatMapSingle<>(Publisher.from(expectedNumbers),
                 value -> succeeded(Integer.toString(value)),
-                false, 1, immediate());
+                false, 1);
         toSource(pub).subscribe(new Subscriber<String>() {
             private Subscription subscription;
 

@@ -35,7 +35,6 @@ final class CompletableToPublisher<T> extends AbstractNoHandleSubscribePublisher
     private final Completable original;
 
     CompletableToPublisher(Completable original, Executor executor) {
-        super(executor);
         this.original = original;
     }
 

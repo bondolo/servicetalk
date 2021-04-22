@@ -34,8 +34,7 @@ final class RedoPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     private final Publisher<T> original;
     private final BiPredicate<Integer, TerminalNotification> shouldRedo;
 
-    RedoPublisher(Publisher<T> original, BiPredicate<Integer, TerminalNotification> shouldRedo, Executor executor) {
-        super(executor);
+    RedoPublisher(Publisher<T> original, BiPredicate<Integer, TerminalNotification> shouldRedo) {
         this.original = original;
         this.shouldRedo = shouldRedo;
     }

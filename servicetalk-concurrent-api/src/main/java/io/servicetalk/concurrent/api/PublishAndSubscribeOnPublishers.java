@@ -56,7 +56,6 @@ final class PublishAndSubscribeOnPublishers {
         private final Publisher<T> original;
 
         PublishAndSubscribeOn(final Executor executor, final Publisher<T> original) {
-            super(executor);
             this.original = original;
         }
 
@@ -79,10 +78,11 @@ final class PublishAndSubscribeOnPublishers {
     }
 
     private static final class PublishOn<T> extends AbstractNoHandleSubscribePublisher<T> {
+        private final Executor executor;
         private final Publisher<T> original;
 
         PublishOn(final Executor executor, final Publisher<T> original) {
-            super(mergeAndOffloadPublish(original.executor(), executor));
+            this.executor = mergeAndOffloadPublish(original.executor(), executor);
             this.original = original;
         }
 
@@ -103,10 +103,11 @@ final class PublishAndSubscribeOnPublishers {
     }
 
     private static final class SubscribeOn<T> extends AbstractNoHandleSubscribePublisher<T> {
+        private final Executor executor;
         private final Publisher<T> original;
 
         SubscribeOn(final Executor executor, final Publisher<T> original) {
-            super(mergeAndOffloadSubscribe(original.executor(), executor));
+            this.executor = mergeAndOffloadSubscribe(original.executor(), executor);
             this.original = original;
         }
 

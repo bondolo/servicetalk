@@ -41,7 +41,6 @@ final class CompletableMergeWithPublisher<T> extends AbstractNoHandleSubscribePu
 
     CompletableMergeWithPublisher(Completable original, Publisher<? extends T> mergeWith, boolean delayError,
                                   Executor executor) {
-        super(executor);
         this.mergeWith = mergeWith;
         this.original = original;
         this.delayError = delayError;

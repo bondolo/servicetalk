@@ -55,12 +55,12 @@ abstract class AbstractPublisherGroupBy<Key, T>
     final int initialCapacityForGroups;
     final int groupQueueSize;
 
-    AbstractPublisherGroupBy(Publisher<T> original, int groupQueueSize, Executor executor) {
-        this(original, groupQueueSize, 4, executor);
+    AbstractPublisherGroupBy(Publisher<T> original, int groupQueueSize) {
+        this(original, groupQueueSize, 4);
     }
 
-    AbstractPublisherGroupBy(Publisher<T> original, int groupQueueSize, int expectedGroupCountHint, Executor executor) {
-        super(original, executor);
+    AbstractPublisherGroupBy(Publisher<T> original, int groupQueueSize, int expectedGroupCountHint) {
+        super(original);
         if (expectedGroupCountHint <= 0) {
             throw new IllegalArgumentException("expectedGroupCountHint " + expectedGroupCountHint + " (expected >0)");
         }
@@ -92,13 +92,11 @@ abstract class AbstractPublisherGroupBy<Key, T>
         @SuppressWarnings("unused")
         @Nullable
         private volatile SpscQueue<GroupedPublisher<Key, T>> groupQueue;
-        private final Executor executor;
         private final Subscriber<? super GroupedPublisher<Key, T>> target;
         private final Map<Key, GroupSink<Key, T>> groups;
 
-        AbstractSourceSubscriber(Executor executor, int initialCapacityForGroups,
+        AbstractSourceSubscriber(int initialCapacityForGroups,
                                  Subscriber<? super GroupedPublisher<Key, T>> target) {
-            this.executor = executor;
             this.target = target;
             // loadFactor: 1 to have table size as expected groups.
             groups = new ConcurrentHashMap<>(initialCapacityForGroups, 1, 1);
@@ -145,7 +143,7 @@ abstract class AbstractPublisherGroupBy<Key, T>
                         return;
                     }
                 }
-                groupSink = new GroupSink<>(executor, key, groupSinkQueueSize, this);
+                groupSink = new GroupSink<>(key, groupSinkQueueSize, this);
                 final GroupSink<Key, T> oldVal = groups.put(key, groupSink);
                 assert oldVal == null;
                 SpscQueue<GroupedPublisher<Key, T>> groupQueue = this.groupQueue;
@@ -435,10 +433,10 @@ abstract class AbstractPublisherGroupBy<Key, T>
         final GroupedPublisher<Key, T> groupedPublisher;
         private final AbstractSourceSubscriber<Key, T> sourceSubscriber;
 
-        GroupSink(Executor executor, Key key, int maxQueueSize, AbstractSourceSubscriber<Key, T> sourceSubscriber) {
+        GroupSink(Key key, int maxQueueSize, AbstractSourceSubscriber<Key, T> sourceSubscriber) {
             super(maxQueueSize);
             this.sourceSubscriber = sourceSubscriber;
-            groupedPublisher = new GroupedPublisherSource<Key, T>(executor, key) {
+            groupedPublisher = new GroupedPublisherSource<Key, T>(key) {
                 @Override
                 protected void handleSubscribe(Subscriber<? super T> subscriber) {
                     requireNonNull(subscriber);
@@ -501,8 +499,8 @@ abstract class AbstractPublisherGroupBy<Key, T>
     private abstract static class GroupedPublisherSource<Key, T> extends GroupedPublisher<Key, T>
             implements PublisherSource<T> {
 
-        GroupedPublisherSource(final Executor executor, final Key key) {
-            super(executor, key);
+        GroupedPublisherSource(final Key key) {
+            super(key);
         }
 
         @Override

@@ -32,12 +32,8 @@ abstract class AbstractNoHandleSubscribePublisher<T> extends Publisher<T> implem
     AbstractNoHandleSubscribePublisher() {
     }
 
-    AbstractNoHandleSubscribePublisher(Executor executor) {
-        super(executor);
-    }
-
-    AbstractNoHandleSubscribePublisher(Executor executor, boolean shareContextOnSubscribe) {
-        super(executor, shareContextOnSubscribe);
+    AbstractNoHandleSubscribePublisher(boolean shareContextOnSubscribe) {
+        super(shareContextOnSubscribe);
     }
 
     @Override
