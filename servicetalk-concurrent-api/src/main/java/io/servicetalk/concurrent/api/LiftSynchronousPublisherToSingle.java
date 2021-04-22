@@ -27,7 +27,6 @@ final class LiftSynchronousPublisherToSingle<T, R> extends Single<R> implements 
 
     LiftSynchronousPublisherToSingle(Publisher<T> original,
                                      PublisherToSingleOperator<? super T, ? extends R> customOperator) {
-        super(original.executor());
         this.original = original;
         this.customOperator = requireNonNull(customOperator);
     }

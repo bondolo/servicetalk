@@ -18,8 +18,6 @@ package io.servicetalk.concurrent.api;
 import io.servicetalk.concurrent.SingleSource;
 import io.servicetalk.concurrent.internal.SignalOffloader;
 
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -55,7 +53,6 @@ final class PublishAndSubscribeOnSingles {
         private final Single<T> original;
 
         PublishAndSubscribeOn(final Executor executor, final Single<T> original) {
-            super(executor);
             this.original = original;
         }
 
@@ -82,7 +79,6 @@ final class PublishAndSubscribeOnSingles {
         private final Single<T> original;
 
         PublishOn(final Executor executor, final Single<T> original) {
-            super(mergeAndOffloadPublish(original.executor(), executor));
             this.original = original;
         }
 
@@ -107,7 +103,6 @@ final class PublishAndSubscribeOnSingles {
         private final Single<T> original;
 
         SubscribeOn(final Executor executor, final Single<T> original) {
-            super(mergeAndOffloadSubscribe(original.executor(), executor));
             this.original = original;
         }
 

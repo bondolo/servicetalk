@@ -32,7 +32,6 @@ abstract class AbstractPubToSingle<T> extends AbstractNoHandleSubscribeSingle<T>
     private final Publisher<T> source;
 
     AbstractPubToSingle(final Executor executor, Publisher<T> source) {
-        super(executor);
         this.source = source;
     }
 

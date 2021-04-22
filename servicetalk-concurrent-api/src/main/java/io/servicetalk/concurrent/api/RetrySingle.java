@@ -31,8 +31,7 @@ final class RetrySingle<T> extends AbstractNoHandleSubscribeSingle<T> {
     private final Single<T> original;
     private final BiIntPredicate<Throwable> shouldRetry;
 
-    RetrySingle(Single<T> original, BiIntPredicate<Throwable> shouldRetry, Executor executor) {
-        super(executor);
+    RetrySingle(Single<T> original, BiIntPredicate<Throwable> shouldRetry) {
         this.original = original;
         this.shouldRetry = shouldRetry;
     }

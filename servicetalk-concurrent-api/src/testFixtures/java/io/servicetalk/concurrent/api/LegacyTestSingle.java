@@ -63,7 +63,6 @@ public class LegacyTestSingle<T> extends Single<T> implements SingleSource.Subsc
     }
 
     public LegacyTestSingle(Executor executor, boolean invokeListenerPostCancel, boolean cacheResults) {
-        super(executor);
         this.invokeListenerPostCancel = invokeListenerPostCancel;
         this.cacheResults = cacheResults;
     }

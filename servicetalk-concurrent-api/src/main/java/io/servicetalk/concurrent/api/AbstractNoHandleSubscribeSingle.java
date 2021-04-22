@@ -31,12 +31,8 @@ abstract class AbstractNoHandleSubscribeSingle<T> extends Single<T> implements S
     AbstractNoHandleSubscribeSingle() {
     }
 
-    AbstractNoHandleSubscribeSingle(Executor executor) {
-        super(executor);
-    }
-
-    AbstractNoHandleSubscribeSingle(final Executor executor, final boolean shareContextOnSubscribe) {
-        super(executor, shareContextOnSubscribe);
+    AbstractNoHandleSubscribeSingle(final boolean shareContextOnSubscribe) {
+        super(shareContextOnSubscribe);
     }
 
     @Override

@@ -69,7 +69,6 @@ public abstract class Single<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Single.class);
 
-    private final Executor executor;
     private final boolean shareContextOnSubscribe;
 
     static {
@@ -80,27 +79,16 @@ public abstract class Single<T> {
      * New instance.
      */
     protected Single() {
-        this(immediate());
+        this(false);
     }
 
     /**
      * New instance.
      *
-     * @param executor {@link Executor} to use for this {@link Single}.
-     */
-    Single(Executor executor) {
-        this(executor, false);
-    }
-
-    /**
-     * New instance.
-     *
-     * @param executor {@link Executor} to use for this {@link Single}.
      * @param shareContextOnSubscribe When subscribed, a copy of the {@link AsyncContextMap} will not be made. This will
      * result in sharing {@link AsyncContext} between sources.
      */
-    Single(Executor executor, boolean shareContextOnSubscribe) {
-        this.executor = requireNonNull(executor);
+    Single(boolean shareContextOnSubscribe) {
         this.shareContextOnSubscribe = shareContextOnSubscribe;
     }
 
@@ -121,7 +109,7 @@ public abstract class Single<T> {
      * @return A new {@link Single} that will now have the result of type {@link R}.
      */
     public final <R> Single<R> map(Function<? super T, ? extends R> mapper) {
-        return new MapSingle<>(this, mapper, executor);
+        return new MapSingle<>(this, mapper);
     }
 
     /**
@@ -284,7 +272,7 @@ public abstract class Single<T> {
      */
     public final Single<T> onErrorMap(Predicate<? super Throwable> predicate,
                                       Function<? super Throwable, ? extends Throwable> mapper) {
-        return new OnErrorMapSingle<>(this, predicate, mapper, executor);
+        return new OnErrorMapSingle<>(this, predicate, mapper);
     }
 
     /**
@@ -374,7 +362,7 @@ public abstract class Single<T> {
      */
     public final Single<T> onErrorResume(Predicate<? super Throwable> predicate,
                                          Function<? super Throwable, ? extends Single<? extends T>> nextFactory) {
-        return new OnErrorResumeSingle<>(this, predicate, nextFactory, executor);
+        return new OnErrorResumeSingle<>(this, predicate, nextFactory);
     }
 
     /**
@@ -418,7 +406,7 @@ public abstract class Single<T> {
      * completes successfully.
      */
     public final <R> Single<R> flatMap(Function<? super T, ? extends Single<? extends R>> next) {
-        return new SingleFlatMapSingle<>(this, next, executor);
+        return new SingleFlatMapSingle<>(this, next);
     }
 
     /**
@@ -436,7 +424,7 @@ public abstract class Single<T> {
      * {@link Single} completes successfully.
      */
     public final Completable flatMapCompletable(Function<? super T, ? extends Completable> next) {
-        return new SingleFlatMapCompletable<>(this, next, executor);
+        return new SingleFlatMapCompletable<>(this, next);
     }
 
     /**
@@ -458,7 +446,7 @@ public abstract class Single<T> {
      * {@link Single} completes successfully.
      */
     public final <R> Publisher<R> flatMapPublisher(Function<? super T, ? extends Publisher<? extends R>> next) {
-        return new SingleFlatMapPublisher<>(this, next, executor);
+        return new SingleFlatMapPublisher<>(this, next);
     }
 
     /**
@@ -671,7 +659,7 @@ public abstract class Single<T> {
      */
     @Deprecated
     public final Single<T> idleTimeout(long duration, TimeUnit unit) {
-        return timeout(duration, unit, executor);
+        return timeout(duration, unit, executor());
     }
 
     /**
@@ -713,7 +701,7 @@ public abstract class Single<T> {
      */
     @Deprecated
     public final Single<T> idleTimeout(Duration duration) {
-        return timeout(duration, executor);
+        return timeout(duration, executor());
     }
 
     /**
@@ -751,7 +739,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
      */
     public final Single<T> timeout(long duration, TimeUnit unit) {
-        return timeout(duration, unit, executor);
+        return timeout(duration, unit, executor());
     }
 
     /**
@@ -789,7 +777,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
      */
     public final Single<T> timeout(Duration duration) {
-        return timeout(duration, executor);
+        return timeout(duration, executor());
     }
 
     /**
@@ -850,7 +838,7 @@ public abstract class Single<T> {
      * terminates successfully.
      */
     public final Single<T> concat(Completable next) {
-        return new SingleConcatWithCompletable<>(this, next, executor);
+        return new SingleConcatWithCompletable<>(this, next);
     }
 
     /**
@@ -871,7 +859,7 @@ public abstract class Single<T> {
      * all elements from {@code next} {@link Publisher}.
      */
     public final Publisher<T> concat(Publisher<? extends T> next) {
-        return new SingleConcatWithPublisher<>(this, next, executor);
+        return new SingleConcatWithPublisher<>(this, next);
     }
 
     /**
@@ -956,7 +944,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/retry.html">ReactiveX retry operator.</a>
      */
     public final Single<T> retry(BiIntPredicate<Throwable> shouldRetry) {
-        return new RetrySingle<>(this, shouldRetry, executor);
+        return new RetrySingle<>(this, shouldRetry);
     }
 
     /**
@@ -995,7 +983,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/retry.html">ReactiveX retry operator.</a>
      */
     public final Single<T> retryWhen(BiIntFunction<Throwable, ? extends Completable> retryWhen) {
-        return new RetryWhenSingle<>(this, retryWhen, executor);
+        return new RetryWhenSingle<>(this, retryWhen);
     }
 
     /**
@@ -1114,7 +1102,7 @@ public abstract class Single<T> {
      * @return The new {@link Single}.
      */
     public final Single<T> beforeCancel(Runnable onCancel) {
-        return new WhenCancellableSingle<>(this, onCancel::run, true, executor);
+        return new WhenCancellableSingle<>(this, onCancel::run, true);
     }
 
     /**
@@ -1183,7 +1171,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/do.html">ReactiveX do operator.</a>
      */
     public final Single<T> beforeFinally(TerminalSignalConsumer doFinally) {
-        return new BeforeFinallySingle<>(this, new TerminalSingleTerminalSignalConsumer<>(doFinally), executor);
+        return new BeforeFinallySingle<>(this, new TerminalSingleTerminalSignalConsumer<>(doFinally));
     }
 
     /**
@@ -1218,7 +1206,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/do.html">ReactiveX do operator.</a>
      */
     public final Single<T> beforeFinally(SingleTerminalSignalConsumer<? super T> doFinally) {
-        return new BeforeFinallySingle<>(this, doFinally, executor);
+        return new BeforeFinallySingle<>(this, doFinally);
     }
 
     /**
@@ -1232,7 +1220,7 @@ public abstract class Single<T> {
      * @return The new {@link Single}.
      */
     public final Single<T> beforeSubscriber(Supplier<? extends Subscriber<? super T>> subscriberSupplier) {
-        return new BeforeSubscriberSingle<>(this, subscriberSupplier, executor);
+        return new BeforeSubscriberSingle<>(this, subscriberSupplier);
     }
 
     /**
@@ -1315,7 +1303,7 @@ public abstract class Single<T> {
      * @return The new {@link Single}.
      */
     public final Single<T> afterCancel(Runnable onCancel) {
-        return new WhenCancellableSingle<>(this, onCancel::run, false, executor);
+        return new WhenCancellableSingle<>(this, onCancel::run, false);
     }
 
     /**
@@ -1384,7 +1372,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/do.html">ReactiveX do operator.</a>
      */
     public final Single<T> afterFinally(TerminalSignalConsumer doFinally) {
-        return new AfterFinallySingle<>(this, new TerminalSingleTerminalSignalConsumer<>(doFinally), executor);
+        return new AfterFinallySingle<>(this, new TerminalSingleTerminalSignalConsumer<>(doFinally));
     }
 
     /**
@@ -1419,7 +1407,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/do.html">ReactiveX do operator.</a>
      */
     public final Single<T> afterFinally(SingleTerminalSignalConsumer<? super T> doFinally) {
-        return new AfterFinallySingle<>(this, doFinally, executor);
+        return new AfterFinallySingle<>(this, doFinally);
     }
 
     /**
@@ -1433,7 +1421,7 @@ public abstract class Single<T> {
      * @return The new {@link Single}.
      */
     public final Single<T> afterSubscriber(Supplier<? extends Subscriber<? super T>> subscriberSupplier) {
-        return new AfterSubscriberSingle<>(this, subscriberSupplier, executor);
+        return new AfterSubscriberSingle<>(this, subscriberSupplier);
     }
 
     /**
@@ -1541,7 +1529,7 @@ public abstract class Single<T> {
      * @see #liftAsync(SingleOperator)
      */
     public final <R> Single<R> liftSync(SingleOperator<? super T, ? extends R> operator) {
-        return new LiftSynchronousSingleOperator<>(this, operator, executor);
+        return new LiftSynchronousSingleOperator<>(this, operator);
     }
 
     /**
@@ -1576,7 +1564,7 @@ public abstract class Single<T> {
      * @see #liftSync(SingleOperator)
      */
     public final <R> Single<R> liftAsync(SingleOperator<? super T, ? extends R> operator) {
-        return new LiftAsynchronousSingleOperator<>(this, operator, executor);
+        return new LiftAsynchronousSingleOperator<>(this, operator);
     }
 
     /**
@@ -1597,7 +1585,7 @@ public abstract class Single<T> {
      * @see <a href="http://reactivex.io/documentation/operators/amb.html">ReactiveX amb operator.</a>
      */
     public final Single<T> ambWith(final Single<T> other) {
-        return new SingleAmbWith<>(executor, this, other);
+        return new SingleAmbWith<>(this, other);
     }
 
     //
@@ -1614,7 +1602,7 @@ public abstract class Single<T> {
      * @return A {@link Publisher} that emits at most a single item which is emitted by this {@code Single}.
      */
     public final Publisher<T> toPublisher() {
-        return new SingleToPublisher<>(this, executor);
+        return new SingleToPublisher<>(this);
     }
 
     /**
@@ -1624,7 +1612,7 @@ public abstract class Single<T> {
      * @return A {@link Completable} that mirrors the terminal signal from this {@code Single}.
      */
     public final Completable toCompletable() {
-        return new SingleToCompletable<>(this, executor);
+        return new SingleToCompletable<>(this);
     }
 
     /**
@@ -2484,7 +2472,7 @@ public abstract class Single<T> {
         try {
             // This is a user-driven subscribe i.e. there is no SignalOffloader override, so create a new
             // SignalOffloader to use.
-            signalOffloader = newOffloaderFor(executor);
+            signalOffloader = newOffloaderFor(executor());
             // Since this is a user-driven subscribe (end of the execution chain), offload subscription methods
             // We also want to make sure the AsyncContext is saved/restored for all interactions with the Subscription.
             offloadedSubscriber = signalOffloader.offloadCancellable(provider.wrapCancellable(subscriber, contextMap));
@@ -2537,10 +2525,10 @@ public abstract class Single<T> {
     /**
      * Returns the {@link Executor} used for this {@link Single}.
      *
-     * @return {@link Executor} used for this {@link Single} via {@link #Single(Executor)}.
+     * @return {@link Executor} used for this {@link Single}.
      */
-    final Executor executor() {
-        return executor;
+    Executor executor() {
+        return immediate();
     }
 
     //

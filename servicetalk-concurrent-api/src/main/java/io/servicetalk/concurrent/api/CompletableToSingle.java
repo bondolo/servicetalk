@@ -23,7 +23,6 @@ final class CompletableToSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
     private final Completable parent;
 
     CompletableToSingle(Completable parent, Executor executor) {
-        super(executor);
         this.parent = parent;
     }
 
