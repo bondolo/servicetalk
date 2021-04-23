@@ -2527,7 +2527,7 @@ public abstract class Single<T> {
      *
      * @return {@link Executor} used for this {@link Single}.
      */
-    Executor executor() {
+    public Executor executor() {
         return immediate();
     }
 

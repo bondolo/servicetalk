@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import javax.annotation.Nullable;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.handleExceptionFromOnSubscribe;
 import static java.util.Objects.requireNonNull;
 
@@ -90,5 +91,10 @@ final class CompletionStageToSingle<T> extends Single<T> implements SingleSource
     @Override
     public void subscribe(final Subscriber<? super T> subscriber) {
         subscribeInternal(subscriber);
+    }
+
+    @Override
+    public Executor executor() {
+        return immediate();
     }
 }

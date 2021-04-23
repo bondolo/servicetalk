@@ -42,6 +42,11 @@ final class CompletableConcatWithSingle<T> extends AbstractCompletableAndSingleC
                 contextProvider);
     }
 
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
     private static final class ConcatWithSubscriber<T> extends AbstractConcatWithSubscriber<T> {
         private final Single<T> next;
 

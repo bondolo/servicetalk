@@ -40,6 +40,11 @@ abstract class AbstractAsynchronousSingleOperator<T, R> extends AbstractNoHandle
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     final void handleSubscribe(Subscriber<? super R> subscriber, SignalOffloader signalOffloader,
                                AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         // Offload signals to the passed Subscriber making sure they are not invoked in the thread that

@@ -32,6 +32,11 @@ final class LiftSynchronousPublisherToSingle<T, R> extends Single<R> implements 
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     protected void handleSubscribe(final SingleSource.Subscriber<? super R> subscriber) {
         deliverErrorFromSource(subscriber,
                 new UnsupportedOperationException("Subscribe with no executor is not supported for " + getClass()));

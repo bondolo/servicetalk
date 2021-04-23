@@ -55,6 +55,11 @@ final class ReduceSingle<R, T> extends AbstractNoHandleSubscribeSingle<R> {
     }
 
     @Override
+    public Executor executor() {
+        return source.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber<? super R> singleSubscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         final R r;
