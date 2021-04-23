@@ -29,12 +29,8 @@ abstract class AbstractNoHandleSubscribeCompletable extends Completable implemen
     AbstractNoHandleSubscribeCompletable() {
     }
 
-    AbstractNoHandleSubscribeCompletable(Executor executor) {
-        super(executor);
-    }
-
-    AbstractNoHandleSubscribeCompletable(final Executor executor, final boolean shareContextOnSubscribe) {
-        super(executor, shareContextOnSubscribe);
+    AbstractNoHandleSubscribeCompletable(final boolean shareContextOnSubscribe) {
+        super(shareContextOnSubscribe);
     }
 
     @Override

@@ -65,7 +65,6 @@ import static java.util.stream.StreamSupport.stream;
 public abstract class Completable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Completable.class);
 
-    private final Executor executor;
     private final boolean shareContextOnSubscribe;
 
     static {
@@ -76,27 +75,16 @@ public abstract class Completable {
      * New instance.
      */
     protected Completable() {
-        this(immediate());
+        this(false);
     }
 
     /**
      * New instance.
      *
-     * @param executor {@link Executor} to use for this {@link Completable}.
-     */
-    Completable(final Executor executor) {
-        this(executor, false);
-    }
-
-    /**
-     * New instance.
-     *
-     * @param executor {@link Executor} to use for this {@link Completable}.
      * @param shareContextOnSubscribe When subscribed, a copy of the {@link AsyncContextMap} will not be made. This will
      * result in sharing {@link AsyncContext} between sources.
      */
-    Completable(Executor executor, boolean shareContextOnSubscribe) {
-        this.executor = requireNonNull(executor);
+    Completable(boolean shareContextOnSubscribe) {
         this.shareContextOnSubscribe = shareContextOnSubscribe;
     }
 
@@ -169,7 +157,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/catch.html">ReactiveX catch operator.</a>
      */
     public final Completable onErrorComplete(Predicate<? super Throwable> predicate) {
-        return new OnErrorCompleteCompletable(this, predicate, executor);
+        return new OnErrorCompleteCompletable(this, predicate);
     }
 
     /**
@@ -242,7 +230,7 @@ public abstract class Completable {
      */
     public final Completable onErrorMap(Predicate<? super Throwable> predicate,
                                         Function<? super Throwable, ? extends Throwable> mapper) {
-        return new OnErrorMapCompletable(this, predicate, mapper, executor);
+        return new OnErrorMapCompletable(this, predicate, mapper);
     }
 
     /**
@@ -327,7 +315,7 @@ public abstract class Completable {
      */
     public final Completable onErrorResume(Predicate<? super Throwable> predicate,
                                            Function<? super Throwable, ? extends Completable> nextFactory) {
-        return new OnErrorResumeCompletable(this, predicate, nextFactory, executor);
+        return new OnErrorResumeCompletable(this, predicate, nextFactory);
     }
 
     /**
@@ -487,87 +475,6 @@ public abstract class Completable {
      * In the event of timeout any {@link Cancellable} from {@link Subscriber#onSubscribe(Cancellable)} will be
      * {@link Cancellable#cancel() cancelled} and the associated {@link Subscriber} will be
      * {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(long, TimeUnit)}.
-     * @param duration The time duration which is allowed to elapse before {@link Subscriber#onComplete()}.
-     * @param unit The units for {@code duration}.
-     * @return a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate with
-     * a {@link TimeoutException} if time {@code duration} elapses before {@link Subscriber#onComplete()}.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     */
-    @Deprecated
-    public final Completable idleTimeout(long duration, TimeUnit unit) {
-        return timeout(duration, unit, executor);
-    }
-
-    /**
-     * Creates a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate
-     * with a {@link TimeoutException} if time {@code duration} elapses between subscribe and termination.
-     * The timer starts when the returned {@link Completable} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Cancellable} from {@link Subscriber#onSubscribe(Cancellable)} will be
-     * {@link Cancellable#cancel() cancelled} and the associated {@link Subscriber} will be
-     * {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(long, TimeUnit, io.servicetalk.concurrent.Executor)}.
-     * @param duration The time duration which is allowed to elapse before {@link Subscriber#onComplete()}.
-     * @param unit The units for {@code duration}.
-     * @param timeoutExecutor The {@link Executor} to use for managing the timer notifications.
-     * @return a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate with
-     * a {@link TimeoutException} if time {@code duration} elapses before {@link Subscriber#onComplete()}.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     */
-    @Deprecated
-    public final Completable idleTimeout(long duration, TimeUnit unit,
-                                         io.servicetalk.concurrent.Executor timeoutExecutor) {
-        return new TimeoutCompletable(this, duration, unit, timeoutExecutor);
-    }
-
-    /**
-     * Creates a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate
-     * with a {@link TimeoutException} if time {@code duration} elapses between subscribe and termination.
-     * The timer starts when the returned {@link Completable} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Cancellable} from {@link Subscriber#onSubscribe(Cancellable)} will be
-     * {@link Cancellable#cancel() cancelled} and the associated {@link Subscriber} will be
-     * {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(Duration)}.
-     * @param duration The time duration which is allowed to elapse before {@link Subscriber#onComplete()}.
-     * @return a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate with
-     * a {@link TimeoutException} if time {@code duration} elapses before {@link Subscriber#onComplete()}.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     */
-    @Deprecated
-    public final Completable idleTimeout(Duration duration) {
-        return timeout(duration, executor);
-    }
-
-    /**
-     * Creates a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate
-     * with a {@link TimeoutException} if time {@code duration} elapses between subscribe and termination.
-     * The timer starts when the returned {@link Completable} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Cancellable} from {@link Subscriber#onSubscribe(Cancellable)} will be
-     * {@link Cancellable#cancel() cancelled} and the associated {@link Subscriber} will be
-     * {@link Subscriber#onError(Throwable) terminated}.
-     * @deprecated Use {@link #timeout(Duration, io.servicetalk.concurrent.Executor)}.
-     * @param duration The time duration which is allowed to elapse before {@link Subscriber#onComplete()}.
-     * @param timeoutExecutor The {@link Executor} to use for managing the timer notifications.
-     * @return a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate with
-     * a {@link TimeoutException} if time {@code duration} elapses before {@link Subscriber#onComplete()}.
-     * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
-     */
-    @Deprecated
-    public final Completable idleTimeout(Duration duration, io.servicetalk.concurrent.Executor timeoutExecutor) {
-        return new TimeoutCompletable(this, duration, timeoutExecutor);
-    }
-
-    /**
-     * Creates a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate
-     * with a {@link TimeoutException} if time {@code duration} elapses between subscribe and termination.
-     * The timer starts when the returned {@link Completable} is subscribed.
-     * <p>
-     * In the event of timeout any {@link Cancellable} from {@link Subscriber#onSubscribe(Cancellable)} will be
-     * {@link Cancellable#cancel() cancelled} and the associated {@link Subscriber} will be
-     * {@link Subscriber#onError(Throwable) terminated}.
      * @param duration The time duration which is allowed to elapse before {@link Subscriber#onComplete()}.
      * @param unit The units for {@code duration}.
      * @return a new {@link Completable} that will mimic the signals of this {@link Completable} but will terminate with
@@ -575,7 +482,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
      */
     public final Completable timeout(long duration, TimeUnit unit) {
-        return timeout(duration, unit, executor);
+        return timeout(duration, unit, executor());
     }
 
     /**
@@ -612,7 +519,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/timeout.html">ReactiveX timeout operator.</a>
      */
     public final Completable timeout(Duration duration) {
-        return timeout(duration, executor);
+        return timeout(duration, executor());
     }
 
     /**
@@ -650,7 +557,7 @@ public abstract class Completable {
      * {@link Completable} has terminated successfully.
      */
     public final Completable concat(Completable next) {
-        return new CompletableConcatWithCompletable(this, next, executor);
+        return new CompletableConcatWithCompletable(this, next);
     }
 
     /**
@@ -672,7 +579,7 @@ public abstract class Completable {
      * has terminated successfully.
      */
     public final <T> Single<T> concat(Single<? extends T> next) {
-        return new CompletableConcatWithSingle<>(this, next, executor);
+        return new CompletableConcatWithSingle<>(this, next);
     }
 
     /**
@@ -695,7 +602,7 @@ public abstract class Completable {
      * {@link Completable} has terminated successfully.
      */
     public final <T> Publisher<T> concat(Publisher<? extends T> next) {
-        return new CompletableConcatWithPublisher<>(this, next, executor);
+        return new CompletableConcatWithPublisher<>(this, next);
     }
 
     /**
@@ -720,7 +627,7 @@ public abstract class Completable {
      * complete or terminates with an error when either terminates with an error.
      */
     public final Completable merge(Completable other) {
-        return new MergeOneCompletable(false, this, executor, other);
+        return new MergeOneCompletable(false, this, other);
     }
 
     /**
@@ -747,7 +654,7 @@ public abstract class Completable {
      * complete or terminates with an error when any one terminates with an error.
      */
     public final Completable merge(Completable... other) {
-        return MergeCompletable.newInstance(false, this, executor, other);
+        return MergeCompletable.newInstance(false, this, other);
     }
 
     /**
@@ -775,7 +682,7 @@ public abstract class Completable {
      * complete or terminates with an error when any one terminates with an error.
      */
     public final Completable merge(Iterable<? extends Completable> other) {
-        return new IterableMergeCompletable(false, this, other, executor);
+        return new IterableMergeCompletable(false, this, other);
     }
 
     /**
@@ -804,7 +711,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/merge.html">ReactiveX merge operator.</a>
      */
     public final <T> Publisher<T> merge(Publisher<? extends T> mergeWith) {
-        return new CompletableMergeWithPublisher<>(this, mergeWith, false, executor);
+        return new CompletableMergeWithPublisher<>(this, mergeWith, false);
     }
 
     /**
@@ -843,7 +750,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/merge.html">ReactiveX merge operator.</a>
      */
     public final <T> Publisher<T> mergeDelayError(Publisher<? extends T> mergeWith) {
-        return new CompletableMergeWithPublisher<>(this, mergeWith, true, executor);
+        return new CompletableMergeWithPublisher<>(this, mergeWith, true);
     }
 
     /**
@@ -882,7 +789,7 @@ public abstract class Completable {
      * terminate in an error.
      */
     public final Completable mergeDelayError(Completable other) {
-        return new MergeOneCompletable(true, this, executor, other);
+        return new MergeOneCompletable(true, this, other);
     }
 
     /**
@@ -923,7 +830,7 @@ public abstract class Completable {
      * terminate in an error.
      */
     public final Completable mergeDelayError(Completable... other) {
-        return MergeCompletable.newInstance(true, this, executor, other);
+        return MergeCompletable.newInstance(true, this, other);
     }
 
     /**
@@ -964,7 +871,7 @@ public abstract class Completable {
      * terminate in an error.
      */
     public final Completable mergeDelayError(Iterable<? extends Completable> other) {
-        return new IterableMergeCompletable(true, this, other, executor);
+        return new IterableMergeCompletable(true, this, other);
     }
 
     /**
@@ -1159,7 +1066,7 @@ public abstract class Completable {
      * @return The new {@link Completable}.
      */
     public final Completable beforeCancel(Runnable onCancel) {
-        return new DoCancellableCompletable(this, onCancel::run, true, executor);
+        return new DoCancellableCompletable(this, onCancel::run, true);
     }
 
     /**
@@ -1223,7 +1130,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/do.html">ReactiveX do operator.</a>
      */
     public final Completable beforeFinally(TerminalSignalConsumer doFinally) {
-        return new BeforeFinallyCompletable(this, doFinally, executor);
+        return new BeforeFinallyCompletable(this, doFinally);
     }
 
     /**
@@ -1237,7 +1144,7 @@ public abstract class Completable {
      * @return The new {@link Completable}.
      */
     public final Completable beforeSubscriber(Supplier<? extends Subscriber> subscriberSupplier) {
-        return new BeforeSubscriberCompletable(this, subscriberSupplier, executor);
+        return new BeforeSubscriberCompletable(this, subscriberSupplier);
     }
 
     /**
@@ -1323,7 +1230,7 @@ public abstract class Completable {
      * @return The new {@link Completable}.
      */
     public final Completable afterCancel(Runnable onCancel) {
-        return new DoCancellableCompletable(this, onCancel::run, false, executor);
+        return new DoCancellableCompletable(this, onCancel::run, false);
     }
 
     /**
@@ -1389,7 +1296,7 @@ public abstract class Completable {
      * @see <a href="http://reactivex.io/documentation/operators/do.html">ReactiveX do operator.</a>
      */
     public final Completable afterFinally(TerminalSignalConsumer doFinally) {
-        return new AfterFinallyCompletable(this, doFinally, executor);
+        return new AfterFinallyCompletable(this, doFinally);
     }
 
     /**
@@ -1403,7 +1310,7 @@ public abstract class Completable {
      * @return The new {@link Completable}.
      */
     public final Completable afterSubscriber(Supplier<? extends Subscriber> subscriberSupplier) {
-        return new AfterSubscriberCompletable(this, subscriberSupplier, executor);
+        return new AfterSubscriberCompletable(this, subscriberSupplier);
     }
 
     /**
@@ -1446,7 +1353,7 @@ public abstract class Completable {
      * @see #liftAsync(CompletableOperator)
      */
     public final Completable liftSync(CompletableOperator operator) {
-        return new LiftSynchronousCompletableOperator(this, operator, executor);
+        return new LiftSynchronousCompletableOperator(this, operator);
     }
 
     /**
@@ -1481,7 +1388,7 @@ public abstract class Completable {
      * @see #liftSync(CompletableOperator)
      */
     public final Completable liftAsync(CompletableOperator operator) {
-        return new LiftAsynchronousCompletableOperator(this, operator, executor);
+        return new LiftAsynchronousCompletableOperator(this, operator);
     }
 
     /**
@@ -1589,7 +1496,7 @@ public abstract class Completable {
      * @return A {@link Publisher} that mirrors the terminal signal from this {@link Completable}.
      */
     public final <T> Publisher<T> toPublisher() {
-        return new CompletableToPublisher<>(this, executor);
+        return new CompletableToPublisher<>(this);
     }
 
     /**
@@ -1598,7 +1505,7 @@ public abstract class Completable {
      * @return A {@link Single} that mirrors the terminal signal from this {@link Completable}.
      */
     public final Single<Void> toSingle() {
-        return new CompletableToSingle<>(this, executor);
+        return new CompletableToSingle<>(this);
     }
 
     /**
@@ -2130,7 +2037,7 @@ public abstract class Completable {
         try {
             // This is a user-driven subscribe i.e. there is no SignalOffloader override, so create a new
             // SignalOffloader to use.
-            signalOffloader = newOffloaderFor(executor);
+            signalOffloader = newOffloaderFor(executor());
             // Since this is a user-driven subscribe (end of the execution chain), offload subscription methods
             // We also want to make sure the AsyncContext is saved/restored for all interactions with the Subscription.
             offloadedSubscriber = signalOffloader.offloadCancellable(provider.wrapCancellable(subscriber, contextMap));
@@ -2182,10 +2089,10 @@ public abstract class Completable {
     /**
      * Returns the {@link Executor} used for this {@link Completable}.
      *
-     * @return {@link Executor} used for this {@link Completable} via {@link #Completable(Executor)}.
+     * @return {@link Executor} used for this {@link Completable} via {@link #Completable()}.
      */
-    final Executor executor() {
-        return executor;
+    Executor executor() {
+        return immediate();
     }
 
     //

@@ -15,8 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.CompletableSource.Subscriber;
-
 /**
  * A {@link Completable} that could be created with an {@link Executor}.
  */
@@ -28,7 +26,7 @@ public final class CompletableWithExecutor extends AbstractSynchronousCompletabl
      * @param delegate {@link Completable} to use.
      */
     public CompletableWithExecutor(final Executor executor, Completable delegate) {
-        super(delegate, executor);
+        super(delegate);
     }
 
     @Override

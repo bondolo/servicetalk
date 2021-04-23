@@ -56,7 +56,6 @@ final class PublishAndSubscribeOnCompletables {
         private final Completable original;
 
         PublishAndSubscribeOn(final Executor executor, final Completable original) {
-            super(executor);
             this.original = original;
         }
 
@@ -80,10 +79,11 @@ final class PublishAndSubscribeOnCompletables {
     }
 
     private static final class PublishOn extends AbstractNoHandleSubscribeCompletable {
+        private final Executor executor;
         private final Completable original;
 
         PublishOn(final Executor executor, final Completable original) {
-            super(mergeAndOffloadPublish(original.executor(), executor));
+            this.executor = mergeAndOffloadPublish(original.executor(), executor);
             this.original = original;
         }
 
@@ -105,10 +105,11 @@ final class PublishAndSubscribeOnCompletables {
     }
 
     private static final class SubscribeOn extends AbstractNoHandleSubscribeCompletable {
+        private final Executor executor;
         private final Completable original;
 
         SubscribeOn(final Executor executor, final Completable original) {
-            super(mergeAndOffloadSubscribe(original.executor(), executor));
+            this.executor = mergeAndOffloadSubscribe(original.executor(), executor);
             this.original = original;
         }
 

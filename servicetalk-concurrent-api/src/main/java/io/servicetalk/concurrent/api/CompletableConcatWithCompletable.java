@@ -30,8 +30,7 @@ final class CompletableConcatWithCompletable extends AbstractNoHandleSubscribeCo
     private final Completable original;
     private final Completable next;
 
-    CompletableConcatWithCompletable(Completable original, Completable next, Executor executor) {
-        super(executor);
+    CompletableConcatWithCompletable(Completable original, Completable next) {
         this.original = original;
         this.next = requireNonNull(next);
     }

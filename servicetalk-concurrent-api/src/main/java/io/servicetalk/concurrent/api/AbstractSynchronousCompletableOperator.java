@@ -35,8 +35,7 @@ abstract class AbstractSynchronousCompletableOperator extends AbstractNoHandleSu
 
     private final Completable original;
 
-    AbstractSynchronousCompletableOperator(Completable original, Executor executor) {
-        super(executor);
+    AbstractSynchronousCompletableOperator(Completable original) {
         this.original = requireNonNull(original);
     }
 
