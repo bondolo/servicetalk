@@ -61,6 +61,11 @@ final class TimeoutCompletable extends AbstractNoHandleSubscribeCompletable {
                 offloader, contextMap, contextProvider);
     }
 
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
     private static final class TimeoutSubscriber implements Subscriber, Cancellable, Runnable {
         /**
          * Create a local instance because the instance is used as part of the local state machine.

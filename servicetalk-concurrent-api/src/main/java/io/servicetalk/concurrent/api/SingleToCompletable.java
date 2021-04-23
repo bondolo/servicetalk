@@ -31,6 +31,11 @@ final class SingleToCompletable<T> extends AbstractNoHandleSubscribeCompletable 
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // We are not modifying the Cancellable between sources, so we do not need to take care of offloading between

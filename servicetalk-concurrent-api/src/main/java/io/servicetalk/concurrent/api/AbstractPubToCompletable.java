@@ -52,6 +52,11 @@ abstract class AbstractPubToCompletable<T> extends AbstractNoHandleSubscribeComp
         source.delegateSubscribe(offloadedSubscription, signalOffloader, contextMap, contextProvider);
     }
 
+    @Override
+    public Executor executor() {
+        return source.executor();
+    }
+
     abstract static class AbstractPubToCompletableSubscriber<T> extends DelayedCancellable
             implements PublisherSource.Subscriber<T> {
         private final Subscriber subscriber;

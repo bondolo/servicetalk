@@ -98,6 +98,11 @@ public class SubscribeThrowsTest {
             protected void handleSubscribe(final CompletableSource.Subscriber subscriber) {
                 throw DELIBERATE_EXCEPTION;
             }
+
+            @Override
+            public Executor executor() {
+                return immediate();
+            }
         };
         Exception e = assertThrows(ExecutionException.class, () -> c.toFuture().get());
         assertThat(e.getCause(), is(DELIBERATE_EXCEPTION));
@@ -111,6 +116,11 @@ public class SubscribeThrowsTest {
             @Override
             protected void handleSubscribe(final CompletableSource.Subscriber subscriber) {
                 throw DELIBERATE_EXCEPTION;
+            }
+
+            @Override
+            public Executor executor() {
+                return immediate();
             }
         };
         AsyncContextProvider provider = AsyncContext.provider();

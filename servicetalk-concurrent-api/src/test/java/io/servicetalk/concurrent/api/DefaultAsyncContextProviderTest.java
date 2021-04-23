@@ -49,6 +49,7 @@ import javax.annotation.Nullable;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
 import static io.servicetalk.concurrent.api.DefaultAsyncContextProvider.INSTANCE;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.internal.TimeoutTracingInfoExtension.DEFAULT_TIMEOUT_SECONDS;
 import static java.lang.Integer.bitCount;
@@ -110,6 +111,11 @@ public class DefaultAsyncContextProviderTest {
             @Override
             protected void handleSubscribe(CompletableSource.Subscriber completableSubscriber) {
                 completeOnExecutor(completableSubscriber);
+            }
+
+            @Override
+            public io.servicetalk.concurrent.api.Executor executor() {
+                return immediate();
             }
         };
 

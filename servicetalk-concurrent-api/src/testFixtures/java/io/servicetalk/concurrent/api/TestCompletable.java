@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -96,6 +97,11 @@ public final class TestCompletable extends Completable implements CompletableSou
     @Override
     public void subscribe(final Subscriber subscriber) {
         subscribeInternal(subscriber);
+    }
+
+    @Override
+    public Executor executor() {
+        return immediate();
     }
 
     /**

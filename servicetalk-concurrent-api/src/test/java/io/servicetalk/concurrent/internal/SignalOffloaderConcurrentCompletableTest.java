@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
 import static io.servicetalk.concurrent.api.Completable.completed;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.internal.TerminalNotification.error;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -158,6 +159,11 @@ public class SignalOffloaderConcurrentCompletableTest {
                         } catch (InterruptedException | ExecutionException e) {
                             subscriber.onError(e);
                         }
+                    }
+
+                    @Override
+                    public Executor executor() {
+                        return immediate();
                     }
                 };
             }

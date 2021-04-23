@@ -63,4 +63,9 @@ abstract class AbstractMergeCompletableOperator<T extends CompletableMergeSubscr
      * @param subscriber {@link T} to be used to merge.
      */
     abstract void doMerge(T subscriber);
+
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
 }

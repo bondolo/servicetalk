@@ -24,6 +24,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.annotation.Nullable;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.internal.TerminalNotification.complete;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -98,6 +99,11 @@ public class LegacyTestCompletable extends Completable implements CompletableSou
         }
         subscribers.clear();
         terminalNotification = TerminalNotification.error(t);
+    }
+
+    @Override
+    public Executor executor() {
+        return immediate();
     }
 
     public boolean isCancelled() {

@@ -21,6 +21,7 @@ import io.servicetalk.concurrent.PublisherSource.Subscriber;
 import io.servicetalk.concurrent.api.AsyncCloseable;
 import io.servicetalk.concurrent.api.AsyncCloseables;
 import io.servicetalk.concurrent.api.Completable;
+import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.api.Publisher;
 import io.servicetalk.concurrent.api.Single;
 import io.servicetalk.concurrent.api.internal.ConnectablePayloadWriter;
@@ -34,6 +35,7 @@ import io.servicetalk.grpc.api.GrpcRoutes.StreamingRoute;
 import java.io.IOException;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.api.Processors.newCompletableProcessor;
 import static io.servicetalk.concurrent.api.Publisher.from;
 import static io.servicetalk.concurrent.api.SourceAdapters.fromSource;
@@ -320,6 +322,11 @@ final class GrpcRouteConversions {
                     return;
                 }
                 subscriber.onComplete();
+            }
+
+            @Override
+            public Executor executor() {
+                return immediate();
             }
         });
     }

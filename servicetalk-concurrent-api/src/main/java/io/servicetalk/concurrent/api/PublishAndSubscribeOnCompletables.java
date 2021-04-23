@@ -53,9 +53,11 @@ final class PublishAndSubscribeOnCompletables {
     }
 
     private static final class PublishAndSubscribeOn extends AbstractNoHandleSubscribeCompletable {
+        private final Executor executor;
         private final Completable original;
 
         PublishAndSubscribeOn(final Executor executor, final Completable original) {
+            this.executor = executor;
             this.original = original;
         }
 
@@ -75,6 +77,11 @@ final class PublishAndSubscribeOnCompletables {
             original.subscribeWithSharedContext(
                     signalOffloader.offloadSubscriber(
                             contextProvider.wrapCompletableSubscriber(subscriber, contextMap)), contextProvider);
+        }
+
+        @Override
+        public Executor executor() {
+            return executor;
         }
     }
 
@@ -102,6 +109,11 @@ final class PublishAndSubscribeOnCompletables {
                     signalOffloader.offloadSubscriber(
                             contextProvider.wrapCompletableSubscriber(subscriber, contextMap)), contextProvider);
         }
+
+        @Override
+        public Executor executor() {
+            return executor;
+        }
     }
 
     private static final class SubscribeOn extends AbstractNoHandleSubscribeCompletable {
@@ -126,6 +138,11 @@ final class PublishAndSubscribeOnCompletables {
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
             original.subscribeWithSharedContext(subscriber, contextProvider);
+        }
+
+        @Override
+        public Executor executor() {
+            return executor;
         }
     }
 }

@@ -17,7 +17,10 @@ package io.servicetalk.concurrent.api.internal;
 
 import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.api.Completable;
+import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.api.SourceAdapters;
+
+import static io.servicetalk.concurrent.api.Executors.immediate;
 
 /**
  * A {@link Completable} that is also a {@link CompletableSource} and hence can be subscribed.
@@ -30,5 +33,10 @@ public abstract class SubscribableCompletable extends Completable implements Com
     @Override
     public final void subscribe(final Subscriber subscriber) {
         subscribeInternal(subscriber);
+    }
+
+    @Override
+    public final Executor executor() {
+        return immediate();
     }
 }

@@ -2091,7 +2091,7 @@ public abstract class Completable {
      *
      * @return {@link Executor} used for this {@link Completable} via {@link #Completable()}.
      */
-    Executor executor() {
+    public Executor executor() {
         return immediate();
     }
 

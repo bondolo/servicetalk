@@ -58,4 +58,9 @@ abstract class AbstractAsynchronousCompletableOperator extends AbstractNoHandleS
         final Subscriber upstreamSubscriber = signalOffloader.offloadCancellable(apply(operatorSubscriber));
         original.delegateSubscribe(upstreamSubscriber, signalOffloader, contextMap, contextProvider);
     }
+
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
 }

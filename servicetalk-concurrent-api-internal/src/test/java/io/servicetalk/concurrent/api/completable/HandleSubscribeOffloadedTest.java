@@ -18,12 +18,14 @@ package io.servicetalk.concurrent.api.completable;
 import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.api.AbstractHandleSubscribeOffloadedTest;
 import io.servicetalk.concurrent.api.Completable;
+import io.servicetalk.concurrent.api.Executor;
 
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static java.lang.Thread.currentThread;
 
 public class HandleSubscribeOffloadedTest extends AbstractHandleSubscribeOffloadedTest {
@@ -34,6 +36,11 @@ public class HandleSubscribeOffloadedTest extends AbstractHandleSubscribeOffload
             handleSubscribeInvokerRef.set(currentThread());
             subscriber.onSubscribe(IGNORE_CANCEL);
             subscriber.onComplete();
+        }
+
+        @Override
+        public Executor executor() {
+            return immediate();
         }
     };
 

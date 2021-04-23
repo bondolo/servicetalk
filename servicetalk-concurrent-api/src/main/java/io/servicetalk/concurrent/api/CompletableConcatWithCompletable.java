@@ -60,6 +60,11 @@ final class CompletableConcatWithCompletable extends AbstractNoHandleSubscribeCo
                 contextMap, contextProvider);
     }
 
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
     private static final class ConcatWithSubscriber implements Subscriber {
         private final Subscriber target;
         private final Completable next;

@@ -44,6 +44,11 @@ final class SingleFlatMapCompletable<T> extends AbstractNoHandleSubscribeComplet
                         contextMap, contextProvider), signalOffloader, contextMap, contextProvider);
     }
 
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
     private static final class SubscriberImpl<T> implements SingleSource.Subscriber<T>, Subscriber {
         private final Subscriber subscriber;
         private final Function<T, ? extends Completable> nextFactory;

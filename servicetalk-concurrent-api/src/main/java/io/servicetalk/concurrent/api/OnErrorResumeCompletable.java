@@ -101,4 +101,9 @@ final class OnErrorResumeCompletable extends AbstractNoHandleSubscribeCompletabl
             }
         }
     }
+
+    @Override
+    public Executor executor() {
+        return original.executor();
+    }
 }

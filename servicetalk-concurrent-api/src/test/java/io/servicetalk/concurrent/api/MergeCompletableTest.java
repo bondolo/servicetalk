@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nullable;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.internal.DeliberateException.DELIBERATE_EXCEPTION;
 import static java.util.Arrays.copyOfRange;
@@ -118,6 +119,11 @@ public class MergeCompletableTest {
                                  }
                              }
                         }
+                    }
+
+                    @Override
+                    public Executor executor() {
+                        return immediate();
                     }
                 };
             }

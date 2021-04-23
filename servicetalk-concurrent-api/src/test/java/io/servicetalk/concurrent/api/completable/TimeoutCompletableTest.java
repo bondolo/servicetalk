@@ -20,6 +20,7 @@ import io.servicetalk.concurrent.CompletableSource;
 import io.servicetalk.concurrent.CompletableSource.Subscriber;
 import io.servicetalk.concurrent.api.Completable;
 import io.servicetalk.concurrent.api.DelegatingExecutor;
+import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.api.ExecutorExtension;
 import io.servicetalk.concurrent.api.TestCancellable;
 import io.servicetalk.concurrent.api.TestExecutor;
@@ -35,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.internal.DeliberateException.DELIBERATE_EXCEPTION;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -174,6 +176,11 @@ public class TimeoutCompletableTest {
         @Override
         protected void handleSubscribe(final Subscriber subscriber) {
             this.subscriber = subscriber;
+        }
+
+        @Override
+        public Executor executor() {
+            return immediate();
         }
     }
 }

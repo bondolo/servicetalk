@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
 import static io.servicetalk.concurrent.api.Completable.completed;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.internal.FlowControlUtils.addWithOverflowProtectionIfNotNegative;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.isRequestNValid;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.newExceptionForInvalidRequestN;
@@ -203,6 +204,11 @@ public class SignalOffloaderConcurrentPublisherTest {
                         } catch (InterruptedException | ExecutionException e) {
                             subscriber.onError(e);
                         }
+                    }
+
+                    @Override
+                    public Executor executor() {
+                        return immediate();
                     }
                 };
             }

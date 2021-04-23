@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
@@ -97,6 +98,11 @@ public class TestExecutor implements Executor {
             protected void handleSubscribe(final CompletableSource.Subscriber subscriber) {
                 closeProcessor.subscribe(subscriber);
                 closeProcessor.onComplete();
+            }
+
+            @Override
+            public Executor executor() {
+                return immediate();
             }
         };
     }

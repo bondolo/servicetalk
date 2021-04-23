@@ -26,6 +26,11 @@ final class CompletableSubscribeShareContext extends AbstractNoHandleSubscribeCo
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // This operator currently only targets the subscribe method. Given this limitation if we try to change the

@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
 import static io.servicetalk.concurrent.api.Executors.from;
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.api.SourceAdapters.toSource;
 import static io.servicetalk.concurrent.internal.DeliberateException.DELIBERATE_EXCEPTION;
 import static io.servicetalk.concurrent.internal.EmptySubscriptions.EMPTY_SUBSCRIPTION;
@@ -140,6 +141,11 @@ public class ExecutorThrowsTest {
                     return;
                 }
                 subscriber.onError(new AssertionError("Offloading failed but onSubscribe passed."));
+            }
+
+            @Override
+            public Executor executor() {
+                return immediate();
             }
         }.publishAndSubscribeOn(newAlwaysFailingExecutor());
         toSource(c).subscribe(new CompletableSource.Subscriber() {
