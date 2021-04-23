@@ -28,11 +28,11 @@ import static io.servicetalk.concurrent.internal.SignalOffloaders.newOffloaderFo
 
 final class MergedOffloadSubscribeExecutor extends DelegatingExecutor implements SignalOffloaderFactory {
 
-    private final Executor fallbackExecutor;
+    private final Executor downstream;
 
-    MergedOffloadSubscribeExecutor(final Executor subscribeOnExecutor, final Executor fallbackExecutor) {
-        super(subscribeOnExecutor);
-        this.fallbackExecutor = fallbackExecutor;
+    MergedOffloadSubscribeExecutor(final Executor upstream, final Executor downstream) {
+        super(upstream);
+        this.downstream = downstream;
     }
 
     @Override
@@ -41,79 +41,79 @@ final class MergedOffloadSubscribeExecutor extends DelegatingExecutor implements
         // the Executor. In practice, the Executor passed here should always be self when the SignalOffloaderFactory is
         // an Executor itself.
         assert executor == this;
-        return new SubscribeOnlySignalOffloader(delegate(), fallbackExecutor);
+        return new SubscribeOnlySignalOffloader(delegate(), downstream);
     }
 
     @Override
     public boolean hasThreadAffinity() {
-        return SignalOffloaders.hasThreadAffinity(delegate()) && SignalOffloaders.hasThreadAffinity(fallbackExecutor);
+        return SignalOffloaders.hasThreadAffinity(delegate()) && SignalOffloaders.hasThreadAffinity(downstream);
     }
 
     private static final class SubscribeOnlySignalOffloader implements SignalOffloader {
 
-        private final SignalOffloader offloader;
-        private final SignalOffloader fallback;
+        private final SignalOffloader offloaded;
+        private final SignalOffloader immediate;
 
         SubscribeOnlySignalOffloader(final Executor subscribeOnExecutor, final Executor fallbackExecutor) {
-            offloader = newOffloaderFor(subscribeOnExecutor);
-            fallback = newOffloaderFor(fallbackExecutor);
+            offloaded = newOffloaderFor(subscribeOnExecutor);
+            immediate = newOffloaderFor(fallbackExecutor);
         }
 
         @Override
         public <T> Subscriber<? super T> offloadSubscriber(final Subscriber<? super T> subscriber) {
-            return fallback.offloadSubscriber(subscriber);
+            return immediate.offloadSubscriber(subscriber);
         }
 
         @Override
         public <T> SingleSource.Subscriber<? super T> offloadSubscriber(
                 final SingleSource.Subscriber<? super T> subscriber) {
-            return fallback.offloadSubscriber(subscriber);
+            return immediate.offloadSubscriber(subscriber);
         }
 
         @Override
         public CompletableSource.Subscriber offloadSubscriber(
                 final CompletableSource.Subscriber subscriber) {
-            return fallback.offloadSubscriber(subscriber);
+            return immediate.offloadSubscriber(subscriber);
         }
 
         @Override
         public <T> Subscriber<? super T> offloadSubscription(final Subscriber<? super T> subscriber) {
-            return offloader.offloadSubscription(subscriber);
+            return offloaded.offloadSubscription(subscriber);
         }
 
         @Override
         public <T> SingleSource.Subscriber<? super T> offloadCancellable(
                 final SingleSource.Subscriber<? super T> subscriber) {
-            return offloader.offloadCancellable(subscriber);
+            return offloaded.offloadCancellable(subscriber);
         }
 
         @Override
         public CompletableSource.Subscriber offloadCancellable(
                 final CompletableSource.Subscriber subscriber) {
-            return offloader.offloadCancellable(subscriber);
+            return offloaded.offloadCancellable(subscriber);
         }
 
         @Override
         public <T> void offloadSubscribe(final Subscriber<? super T> subscriber,
                                          final Consumer<Subscriber<? super T>> handleSubscribe) {
-            offloader.offloadSubscribe(subscriber, handleSubscribe);
+            offloaded.offloadSubscribe(subscriber, handleSubscribe);
         }
 
         @Override
         public <T> void offloadSubscribe(final SingleSource.Subscriber<? super T> subscriber,
                                          final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-            offloader.offloadSubscribe(subscriber, handleSubscribe);
+            offloaded.offloadSubscribe(subscriber, handleSubscribe);
         }
 
         @Override
         public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
                                      final Consumer<CompletableSource.Subscriber> handleSubscribe) {
-            offloader.offloadSubscribe(subscriber, handleSubscribe);
+            offloaded.offloadSubscribe(subscriber, handleSubscribe);
         }
 
         @Override
         public <T> void offloadSignal(final T signal, final Consumer<T> signalConsumer) {
-            offloader.offloadSignal(signal, signalConsumer);
+            offloaded.offloadSignal(signal, signalConsumer);
         }
     }
 }

@@ -87,7 +87,7 @@ final class PublishAndSubscribeOnSingles {
         private final Single<T> original;
 
         PublishOn(final Executor executor, final Single<T> original) {
-            this.executor =  MergedExecutors.mergeAndOffloadPublish(original.executor(), executor);;
+            this.executor = MergedExecutors.mergeAndOffloadPublish(original.executor(), executor);
             this.original = original;
         }
 
@@ -111,7 +111,6 @@ final class PublishAndSubscribeOnSingles {
         public Executor executor() {
             return executor;
         }
-
     }
 
     private static final class SubscribeOn<T> extends AbstractNoHandleSubscribeSingle<T> {

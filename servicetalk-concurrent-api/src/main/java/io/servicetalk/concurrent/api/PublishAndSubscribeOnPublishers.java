@@ -53,9 +53,11 @@ final class PublishAndSubscribeOnPublishers {
     }
 
     private static final class PublishAndSubscribeOn<T> extends AbstractNoHandleSubscribePublisher<T> {
+        private final Executor executor;
         private final Publisher<T> original;
 
         PublishAndSubscribeOn(final Executor executor, final Publisher<T> original) {
+            this.executor = executor;
             this.original = original;
         }
 
@@ -74,6 +76,11 @@ final class PublishAndSubscribeOnPublishers {
             // they hit this operator.
             original.subscribeWithSharedContext(
                     signalOffloader.offloadSubscriber(contextProvider.wrapPublisherSubscriber(subscriber, contextMap)));
+        }
+
+        @Override
+        Executor executor() {
+            return executor;
         }
     }
 
@@ -100,6 +107,11 @@ final class PublishAndSubscribeOnPublishers {
             original.subscribeWithSharedContext(
                     signalOffloader.offloadSubscriber(contextProvider.wrapPublisherSubscriber(subscriber, contextMap)));
         }
+
+        @Override
+        Executor executor() {
+            return executor;
+        }
     }
 
     private static final class SubscribeOn<T> extends AbstractNoHandleSubscribePublisher<T> {
@@ -124,6 +136,11 @@ final class PublishAndSubscribeOnPublishers {
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
             original.subscribeWithSharedContext(subscriber);
+        }
+
+        @Override
+        Executor executor() {
+            return executor;
         }
     }
 }
