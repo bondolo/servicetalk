@@ -27,28 +27,28 @@ final class MergedExecutors {
     /**
      * For scenarios where we need an {@link Executor} for selectively offloading some signals, we need to merge
      * {@link Executor}s so that we can use an appropriate {@link Executor} for offloading specific signals. This method
-     * does such merging when the {@code publishOnExecutor} {@link Executor} only needs to offload publish signals.
+     * does such merging when the {@code offloadExecutor} {@link Executor} only needs to offload publish signals.
      *
-     * @param fallback {@link Executor} that we need to merge {@code publishOnExecutor} with.
-     * @param publishOnExecutor {@link Executor} that is to be merged with {@code fallback}.
-     * @return {@link Executor} which will use {@code fallback} for all signals that are not offloaded by
-     * {@code publishOnExecutor}.
+     * @param immediateExecutor {@link Executor} that we need to merge {@code offloadExecutor} with.
+     * @param offloadExecutor {@link Executor} that is to be merged with {@code immediateExecutor}.
+     * @return {@link Executor} which will use {@code immediateExecutor} for all signals that are not offloaded by
+     * {@code offloadExecutor}.
      */
-    static Executor mergeAndOffloadPublish(final Executor fallback, final Executor publishOnExecutor) {
-        return new MergedOffloadPublishExecutor(publishOnExecutor, fallback);
+    static Executor mergeAndOffloadPublish(final Executor immediateExecutor, final Executor offloadExecutor) {
+        return new MergedOffloadPublishExecutor(offloadExecutor, immediateExecutor);
     }
 
     /**
      * For scenarios where we need an {@link Executor} for selectively offloading some signals, we need to merge
      * {@link Executor}s so that we can use an appropriate {@link Executor} for offloading specific signals. This method
-     * does such merging when the {@code subscribeOnExecutor} {@link Executor} only needs to offload subscribe signals.
+     * does such merging when the {@code offloadExecutor} {@link Executor} only needs to offload subscribe signals.
      *
-     * @param fallback {@link Executor} that we need to merge {@code subscribeOnExecutor} with.
-     * @param subscribeOnExecutor {@link Executor} that is to be merged with {@code fallback}.
-     * @return {@link Executor} which will use {@code fallback} for all signals that are not offloaded by
-     * {@code subscribeOnExecutor}.
+     * @param immediateExecutor {@link Executor} that we need to merge {@code offloadExecutor} with.
+     * @param offloadExecutor {@link Executor} that is to be merged with {@code immediateExecutor}.
+     * @return {@link Executor} which will use {@code immediateExecutor} for all signals that are not offloaded by
+     * {@code offloadExecutor}.
      */
-    static Executor mergeAndOffloadSubscribe(final Executor fallback, final Executor subscribeOnExecutor) {
-        return new MergedOffloadSubscribeExecutor(subscribeOnExecutor, fallback);
+    static Executor mergeAndOffloadSubscribe(final Executor immediateExecutor, final Executor offloadExecutor) {
+        return new MergedOffloadSubscribeExecutor(offloadExecutor, immediateExecutor);
     }
 }

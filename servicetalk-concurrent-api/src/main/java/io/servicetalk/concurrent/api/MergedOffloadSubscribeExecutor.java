@@ -26,6 +26,10 @@ import java.util.function.Consumer;
 
 import static io.servicetalk.concurrent.internal.SignalOffloaders.newOffloaderFor;
 
+/**
+ * For scenarios where we need an {@link Executor} for selectively offloading subscribe signals, we need to merge
+ * {@link Executor}s such that the subscribe signals are offloaded and other signals are executed on
+ * the immediate executor */
 final class MergedOffloadSubscribeExecutor extends DelegatingExecutor implements SignalOffloaderFactory {
 
     private final Executor downstream;
@@ -54,9 +58,9 @@ final class MergedOffloadSubscribeExecutor extends DelegatingExecutor implements
         private final SignalOffloader offloaded;
         private final SignalOffloader immediate;
 
-        SubscribeOnlySignalOffloader(final Executor subscribeOnExecutor, final Executor fallbackExecutor) {
-            offloaded = newOffloaderFor(subscribeOnExecutor);
-            immediate = newOffloaderFor(fallbackExecutor);
+        SubscribeOnlySignalOffloader(final Executor offloadExecutor, final Executor immediateExecutor) {
+            offloaded = newOffloaderFor(offloadExecutor);
+            immediate = newOffloaderFor(immediateExecutor);
         }
 
         @Override
@@ -91,24 +95,6 @@ final class MergedOffloadSubscribeExecutor extends DelegatingExecutor implements
         public CompletableSource.Subscriber offloadCancellable(
                 final CompletableSource.Subscriber subscriber) {
             return offloaded.offloadCancellable(subscriber);
-        }
-
-        @Override
-        public <T> void offloadSubscribe(final Subscriber<? super T> subscriber,
-                                         final Consumer<Subscriber<? super T>> handleSubscribe) {
-            offloaded.offloadSubscribe(subscriber, handleSubscribe);
-        }
-
-        @Override
-        public <T> void offloadSubscribe(final SingleSource.Subscriber<? super T> subscriber,
-                                         final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-            offloaded.offloadSubscribe(subscriber, handleSubscribe);
-        }
-
-        @Override
-        public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
-                                     final Consumer<CompletableSource.Subscriber> handleSubscribe) {
-            offloaded.offloadSubscribe(subscriber, handleSubscribe);
         }
 
         @Override

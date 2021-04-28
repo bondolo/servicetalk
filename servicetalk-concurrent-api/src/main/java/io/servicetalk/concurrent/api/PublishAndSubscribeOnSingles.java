@@ -125,16 +125,12 @@ final class PublishAndSubscribeOnSingles {
         @Override
         void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-            // This operator is to make sure that we use the executor to subscribe to the Single that is returned
-            // by this operator.
-            //
-            // Subscription and handleSubscribe are offloaded at subscribe so we do not need to do anything specific
-            // here.
-            //
-            // This operator acts as a boundary that changes the Executor from original to the rest of the execution
-            // chain. If there is already an Executor defined for original, it will be used to offload signals until
-            // they hit this operator.
-            original.subscribeWithSharedContext(subscriber, contextProvider);
+            try {
+                executor.execute(() -> original.subscribeWithSharedContext(subscriber, contextProvider));
+            } catch (Throwable throwable) {
+                // We assume that if executor accepted the task, it was run and no exception will be thrown from run.
+                deliverErrorFromSource(subscriber, throwable);
+            }
         }
 
         @Override

@@ -19,7 +19,6 @@ import io.servicetalk.concurrent.PublisherSource.Subscriber;
 import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
-import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -119,23 +118,19 @@ final class PublishAndSubscribeOnPublishers {
         private final Publisher<T> original;
 
         SubscribeOn(final Executor executor, final Publisher<T> original) {
-            this.executor = mergeAndOffloadSubscribe(original.executor(), executor);
+            this.executor = executor;
             this.original = original;
         }
 
         @Override
         void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
-            // This operator is to make sure that we use the executor to subscribe to the Publisher that is returned
-            // by this operator.
-            //
-            // Subscription and handleSubscribe are offloaded at subscribe so we do not need to do anything specific
-            // here.
-            //
-            // This operator acts as a boundary that changes the Executor from original to the rest of the execution
-            // chain. If there is already an Executor defined for original, it will be used to offload signals until
-            // they hit this operator.
-            original.subscribeWithSharedContext(subscriber);
+            try {
+                executor.execute(() -> original.subscribeWithSharedContext(subscriber));
+            } catch (Throwable throwable) {
+                // We assume that if executor accepted the task, it was run and no exception will be thrown from accept.
+                deliverErrorFromSource(subscriber, throwable);
+            }
         }
 
         @Override

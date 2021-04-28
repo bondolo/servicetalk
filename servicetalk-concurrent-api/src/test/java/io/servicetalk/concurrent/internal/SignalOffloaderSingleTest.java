@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -36,7 +35,6 @@ import static io.servicetalk.concurrent.internal.NoopRunnable.NOOP_RUNNABLE;
 import static io.servicetalk.concurrent.internal.ThrowingRunnable.THROWING_RUNNABLE;
 import static java.lang.Thread.currentThread;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -214,22 +212,6 @@ public class SignalOffloaderSingleTest {
         state.verifyOnErrorOffloaded(offloaded);
         state.awaitTermination();
         assertThrows(IllegalStateException.class, () -> state.offloader.offloadSubscriber(state.subscriber));
-    }
-
-    @ParameterizedTest(name = "{displayName} [{index}] {arguments}")
-    @EnumSource(OffloaderTestParam.class)
-    public void executorRejectsForHandleSubscribe(OffloaderTestParam offloader) {
-        init(offloader);
-        ThreadBasedSignalOffloader rejectOffloader = new ThreadBasedSignalOffloader(from(task -> {
-            throw new RejectedExecutionException();
-        }));
-        rejectOffloader.offloadSubscribe(state.subscriber, __ -> {
-        });
-        verify(state.subscriber).onSubscribe(any(Cancellable.class));
-        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
-        verify(state.subscriber).onError(errorCaptor.capture());
-        assertThat("Unexpected error received by the subscriber.", errorCaptor.getValue(),
-                instanceOf(RejectedExecutionException.class));
     }
 
     private static final class OffloaderHolder {

@@ -15,15 +15,11 @@
  */
 package io.servicetalk.concurrent.api.internal;
 
-import io.servicetalk.concurrent.Cancellable;
-import io.servicetalk.concurrent.api.Completable;
+import io.servicetalk.concurrent.api.DelegatingExecutor;
 import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.internal.SignalOffloader;
 import io.servicetalk.concurrent.internal.SignalOffloaderFactory;
 import io.servicetalk.concurrent.internal.SignalOffloaders;
-
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static io.servicetalk.concurrent.internal.SignalOffloaders.newThreadBasedOffloader;
 import static java.util.Objects.requireNonNull;
@@ -32,9 +28,8 @@ import static java.util.Objects.requireNonNull;
  * An {@link Executor} which is also a {@link SignalOffloaderFactory} and hence can influence a specific
  * {@link SignalOffloader} used by this {@link Executor}.
  */
-public final class OffloaderAwareExecutor implements Executor, SignalOffloaderFactory {
+public final class OffloaderAwareExecutor extends DelegatingExecutor implements SignalOffloaderFactory {
 
-    private final Executor delegate;
     private final SignalOffloaderFactory offloaderFactory;
 
     /**
@@ -44,29 +39,8 @@ public final class OffloaderAwareExecutor implements Executor, SignalOffloaderFa
      * @param offloaderFactory {@link SignalOffloaderFactory} to use.
      */
     public OffloaderAwareExecutor(final Executor delegate, final SignalOffloaderFactory offloaderFactory) {
-        this.delegate = requireNonNull(delegate);
+        super(delegate);
         this.offloaderFactory = requireNonNull(offloaderFactory);
-    }
-
-    @Override
-    public Cancellable execute(final Runnable task) throws RejectedExecutionException {
-        return delegate.execute(task);
-    }
-
-    @Override
-    public Cancellable schedule(final Runnable task, final long delay, final TimeUnit unit)
-            throws RejectedExecutionException {
-        return delegate.schedule(task, delay, unit);
-    }
-
-    @Override
-    public Completable onClose() {
-        return delegate.onClose();
-    }
-
-    @Override
-    public Completable closeAsync() {
-        return delegate.closeAsync();
     }
 
     @Override

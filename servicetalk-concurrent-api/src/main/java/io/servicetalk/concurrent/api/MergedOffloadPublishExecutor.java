@@ -26,10 +26,24 @@ import java.util.function.Consumer;
 
 import static io.servicetalk.concurrent.internal.SignalOffloaders.newOffloaderFor;
 
+/**
+ * For scenarios where we need an {@link Executor} for selectively offloading publish signals, we need to merge
+ * {@link Executor}s such that the publish signals are offloaded and other signals are executed on
+ * the immediate executor */
 final class MergedOffloadPublishExecutor extends DelegatingExecutor implements SignalOffloaderFactory {
 
     private final Executor immediateExecutor;
 
+    /**
+     * For scenarios where we need an {@link Executor} for selectively offloading some signals, we need to merge
+     * {@link Executor}s so that we can use an appropriate {@link Executor} for offloading specific signals. This method
+     * does such merging when the {@code publishOnExecutor} {@link Executor} only needs to offload publish signals.
+     *
+     * @param upstream {@link Executor} that we need to merge {@code upstream} with.
+     * @param downstream {@link Executor} that is to be merged with {@code upstream}.
+     * @return {@link Executor} which will use {@code fallback} for all signals that are not offloaded by
+     * {@code publishOnExecutor}.
+     */
     MergedOffloadPublishExecutor(final Executor downstream, final Executor upstream) {
         super(downstream);
         this.immediateExecutor = upstream;
@@ -54,9 +68,9 @@ final class MergedOffloadPublishExecutor extends DelegatingExecutor implements S
         private final SignalOffloader offloaded;
         private final SignalOffloader immediate;
 
-        PublishOnlySignalOffloader(final Executor publishOnExecutor, final Executor fallbackExecutor) {
-            offloaded = newOffloaderFor(publishOnExecutor);
-            immediate = newOffloaderFor(fallbackExecutor);
+        PublishOnlySignalOffloader(final Executor offloadExecutor, final Executor immediateExecutor) {
+            offloaded = newOffloaderFor(offloadExecutor);
+            this.immediate = newOffloaderFor(immediateExecutor);
         }
 
         @Override
@@ -89,24 +103,6 @@ final class MergedOffloadPublishExecutor extends DelegatingExecutor implements S
         @Override
         public CompletableSource.Subscriber offloadCancellable(final CompletableSource.Subscriber subscriber) {
             return immediate.offloadCancellable(subscriber);
-        }
-
-        @Override
-        public <T> void offloadSubscribe(final Subscriber<? super T> subscriber,
-                                         final Consumer<Subscriber<? super T>> handleSubscribe) {
-            immediate.offloadSubscribe(subscriber, handleSubscribe);
-        }
-
-        @Override
-        public <T> void offloadSubscribe(final SingleSource.Subscriber<? super T> subscriber,
-                                         final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-            immediate.offloadSubscribe(subscriber, handleSubscribe);
-        }
-
-        @Override
-        public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
-                                     final Consumer<CompletableSource.Subscriber> handleSubscribe) {
-            immediate.offloadSubscribe(subscriber, handleSubscribe);
         }
 
         @Override

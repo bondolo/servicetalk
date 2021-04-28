@@ -33,7 +33,6 @@ import javax.annotation.Nullable;
 
 import static io.servicetalk.concurrent.Cancellable.IGNORE_CANCEL;
 import static io.servicetalk.concurrent.internal.EmptySubscriptions.EMPTY_SUBSCRIPTION;
-import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.isRequestNValid;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.safeCancel;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.safeOnComplete;
@@ -102,39 +101,6 @@ final class TaskBasedSignalOffloader implements SignalOffloader {
     @Override
     public CompletableSource.Subscriber offloadCancellable(final CompletableSource.Subscriber subscriber) {
         return new OffloadedCancellableCompletableSubscriber(subscriber, executor);
-    }
-
-    @Override
-    public <T> void offloadSubscribe(final Subscriber<? super T> subscriber,
-                                     final Consumer<Subscriber<? super T>> handleSubscribe) {
-        try {
-            executor.execute(() -> handleSubscribe.accept(subscriber));
-        } catch (Throwable throwable) {
-            // We assume that if executor accepted the task, it was run and no exception will be thrown from accept.
-            deliverErrorFromSource(subscriber, throwable);
-        }
-    }
-
-    @Override
-    public <T> void offloadSubscribe(final SingleSource.Subscriber<? super T> subscriber,
-                                     final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-        try {
-            executor.execute(() -> handleSubscribe.accept(subscriber));
-        } catch (Throwable throwable) {
-            // We assume that if executor accepted the task, it was run and no exception will be thrown from accept.
-            deliverErrorFromSource(subscriber, throwable);
-        }
-    }
-
-    @Override
-    public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
-                                 final Consumer<CompletableSource.Subscriber> handleSubscribe) {
-        try {
-            executor.execute(() -> handleSubscribe.accept(subscriber));
-        } catch (Throwable throwable) {
-            // We assume that if executor accepted the task, it was run and no exception will be thrown from accept.
-            deliverErrorFromSource(subscriber, throwable);
-        }
     }
 
     @Override

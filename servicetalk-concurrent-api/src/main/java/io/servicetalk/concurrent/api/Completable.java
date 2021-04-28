@@ -2045,8 +2045,8 @@ public abstract class Completable {
             deliverErrorFromSource(subscriber, t);
             return;
         }
-        signalOffloader.offloadSubscribe(offloadedSubscriber, provider.wrapConsumer(
-                s -> handleSubscribe(s, signalOffloader, contextMap, provider), contextMap));
+        executor().execute(provider.wrapRunnable(() ->
+            handleSubscribe(offloadedSubscriber, signalOffloader, contextMap, provider), contextMap));
     }
 
     /**
@@ -2055,8 +2055,7 @@ public abstract class Completable {
      * <p>
      * This method wraps the passed {@link Subscriber} using
      * {@link SignalOffloader#offloadSubscriber(CompletableSource.Subscriber)} and then calls
-     * {@link #handleSubscribe(CompletableSource.Subscriber)} using
-     * {@link SignalOffloader#offloadSubscribe(CompletableSource.Subscriber, Consumer)}.
+     * {@link #handleSubscribe(CompletableSource.Subscriber)}.
      * Operators that do not wish to wrap the passed {@link Subscriber} can override this method and omit the wrapping.
      *
      * @param subscriber the subscriber.

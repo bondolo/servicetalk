@@ -15,9 +15,6 @@
  */
 package io.servicetalk.concurrent.api;
 
-import io.servicetalk.concurrent.CompletableSource;
-import io.servicetalk.concurrent.PublisherSource;
-import io.servicetalk.concurrent.SingleSource;
 import io.servicetalk.concurrent.api.internal.OffloaderAwareExecutor;
 import io.servicetalk.concurrent.internal.DelegatingSignalOffloader;
 import io.servicetalk.concurrent.internal.DelegatingSignalOffloaderFactory;
@@ -30,7 +27,6 @@ import org.junit.rules.Timeout;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import static io.servicetalk.concurrent.api.ExecutorRule.withExecutor;
 import static io.servicetalk.concurrent.api.Executors.newCachedThreadExecutor;
@@ -64,28 +60,28 @@ public abstract class AbstractHandleSubscribeOffloadedTest {
             public SignalOffloader newSignalOffloader(final io.servicetalk.concurrent.Executor executor) {
                 signalOffloaderCreated.incrementAndGet();
                 return new DelegatingSignalOffloader(super.newSignalOffloader(executor)) {
-                    @Override
-                    public <T> void offloadSubscribe(
-                            final PublisherSource.Subscriber<? super T> subscriber,
-                            final Consumer<PublisherSource.Subscriber<? super T>> handleSubscribe) {
-                        offloadPublisherSubscribeCalled.incrementAndGet();
-                        super.offloadSubscribe(subscriber, handleSubscribe);
-                    }
-
-                    @Override
-                    public <T> void offloadSubscribe(
-                            final SingleSource.Subscriber<? super T> subscriber,
-                            final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-                        offloadSingleSubscribeCalled.incrementAndGet();
-                        super.offloadSubscribe(subscriber, handleSubscribe);
-                    }
-
-                    @Override
-                    public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
-                                                 final Consumer<CompletableSource.Subscriber> handleSubscribe) {
-                        offloadCompletableSubscribeCalled.incrementAndGet();
-                        super.offloadSubscribe(subscriber, handleSubscribe);
-                    }
+                    // @Override
+                    // public <T> void offloadSubscribe(
+                    //         final PublisherSource.Subscriber<? super T> subscriber,
+                    //         final Consumer<PublisherSource.Subscriber<? super T>> handleSubscribe) {
+                    //     offloadPublisherSubscribeCalled.incrementAndGet();
+                    //     super.offloadSubscribe(subscriber, handleSubscribe);
+                    // }
+                    //
+                    // @Override
+                    // public <T> void offloadSubscribe(
+                    //         final SingleSource.Subscriber<? super T> subscriber,
+                    //         final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
+                    //     offloadSingleSubscribeCalled.incrementAndGet();
+                    //     super.offloadSubscribe(subscriber, handleSubscribe);
+                    // }
+                    //
+                    // @Override
+                    // public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
+                    //                              final Consumer<CompletableSource.Subscriber> handleSubscribe) {
+                    //     offloadCompletableSubscribeCalled.incrementAndGet();
+                    //     super.offloadSubscribe(subscriber, handleSubscribe);
+                    // }
                 };
             }
         };

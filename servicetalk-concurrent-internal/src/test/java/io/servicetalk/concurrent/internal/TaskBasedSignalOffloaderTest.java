@@ -25,8 +25,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.function.Consumer;
-
 import static io.servicetalk.concurrent.internal.DeliberateException.DELIBERATE_EXCEPTION;
 import static io.servicetalk.concurrent.internal.TerminalNotification.complete;
 import static io.servicetalk.concurrent.internal.TerminalNotification.error;
@@ -39,7 +37,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 public class TaskBasedSignalOffloaderTest extends AbstractSignalOffloaderTest<TaskBasedSignalOffloader> {
 
@@ -56,39 +53,6 @@ public class TaskBasedSignalOffloaderTest extends AbstractSignalOffloaderTest<Ta
     @Override
     protected TaskBasedSignalOffloader newOffloader(MockExecutor executor) {
         return new TaskBasedSignalOffloader(executor, 2);
-    }
-
-    @Test
-    public void offloadSubscribePublisher() {
-        Consumer<Subscriber<? super Integer>> handleSubscribe = uncheckedMock(Consumer.class);
-        offloader.offloadSubscribe(pubSub, handleSubscribe);
-        verify(executor.mock).execute(any());
-        verifyZeroInteractions(pubSub);
-        verifyZeroInteractions(handleSubscribe);
-        assertThat("Unexpected tasks executed.", executor.executeAllTasks(), is(1));
-        verify(handleSubscribe).accept(pubSub);
-    }
-
-    @Test
-    public void offloadSubscribeSingle() {
-        Consumer<SingleSource.Subscriber<? super Integer>> handleSubscribe = uncheckedMock(Consumer.class);
-        offloader.offloadSubscribe(singleSub, handleSubscribe);
-        verify(executor.mock).execute(any());
-        verifyZeroInteractions(singleSub);
-        verifyZeroInteractions(handleSubscribe);
-        assertThat("Unexpected tasks executed.", executor.executeAllTasks(), is(1));
-        verify(handleSubscribe).accept(singleSub);
-    }
-
-    @Test
-    public void offloadSubscribeCompletable() {
-        Consumer<CompletableSource.Subscriber> handleSubscribe = uncheckedMock(Consumer.class);
-        offloader.offloadSubscribe(completableSub, handleSubscribe);
-        verify(executor.mock).execute(any());
-        verifyZeroInteractions(completableSub);
-        verifyZeroInteractions(handleSubscribe);
-        assertThat("Unexpected tasks executed.", executor.executeAllTasks(), is(1));
-        verify(handleSubscribe).accept(completableSub);
     }
 
     @Test

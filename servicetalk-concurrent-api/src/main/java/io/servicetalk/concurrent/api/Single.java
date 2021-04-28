@@ -2480,8 +2480,8 @@ public abstract class Single<T> {
             deliverErrorFromSource(subscriber, t);
             return;
         }
-        signalOffloader.offloadSubscribe(offloadedSubscriber, provider.wrapConsumer(
-                s -> handleSubscribe(s, signalOffloader, contextMap, provider), contextMap));
+        executor().execute(provider.wrapRunnable(() ->
+            handleSubscribe(offloadedSubscriber, signalOffloader, contextMap, provider), contextMap));
     }
 
     /**
@@ -2490,8 +2490,7 @@ public abstract class Single<T> {
      * <p>
      * This method wraps the passed {@link Subscriber} using
      * {@link SignalOffloader#offloadSubscriber(SingleSource.Subscriber)} and then calls
-     * {@link #handleSubscribe(SingleSource.Subscriber)} using
-     * {@link SignalOffloader#offloadSubscribe(SingleSource.Subscriber, Consumer)}. Operators that do not wish to wrap
+     * {@link #handleSubscribe(SingleSource.Subscriber)} using. Operators that do not wish to wrap
      * the passed {@link Subscriber} can override this method and omit the wrapping.
      *
      * @param subscriber the subscriber.

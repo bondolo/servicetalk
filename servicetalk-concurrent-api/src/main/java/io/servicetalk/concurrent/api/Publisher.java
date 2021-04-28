@@ -3584,8 +3584,8 @@ public abstract class Publisher<T> {
             deliverErrorFromSource(subscriber, t);
             return;
         }
-        signalOffloader.offloadSubscribe(offloadedSubscriber, provider.wrapConsumer(
-                s -> handleSubscribe(s, signalOffloader, contextMap, provider), contextMap));
+        executor().execute(provider.wrapRunnable(() ->
+            handleSubscribe(offloadedSubscriber, signalOffloader, contextMap, provider), contextMap));
     }
 
     /**
@@ -3593,8 +3593,7 @@ public abstract class Publisher<T> {
      * {@link #handleSubscribe(PublisherSource.Subscriber)} call to the passed {@link SignalOffloader}.
      * <p>
      * This method wraps the passed {@link Subscriber} using {@link SignalOffloader#offloadSubscriber(Subscriber)} and
-     * then calls {@link #handleSubscribe(PublisherSource.Subscriber)} using
-     * {@link SignalOffloader#offloadSubscribe(Subscriber, Consumer)}.
+     * then calls {@link #handleSubscribe(PublisherSource.Subscriber)}
      * Operators that do not wish to wrap the passed {@link Subscriber} can override this method and omit the wrapping.
      *
      * @param subscriber the subscriber.

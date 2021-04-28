@@ -72,24 +72,6 @@ public class DelegatingSignalOffloader implements SignalOffloader {
     }
 
     @Override
-    public <T> void offloadSubscribe(final PublisherSource.Subscriber<? super T> subscriber,
-                                     final Consumer<PublisherSource.Subscriber<? super T>> handleSubscribe) {
-        delegate.offloadSubscribe(subscriber, handleSubscribe);
-    }
-
-    @Override
-    public <T> void offloadSubscribe(final SingleSource.Subscriber<? super T> subscriber,
-                                     final Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-        delegate.offloadSubscribe(subscriber, handleSubscribe);
-    }
-
-    @Override
-    public void offloadSubscribe(final CompletableSource.Subscriber subscriber,
-                                 final Consumer<CompletableSource.Subscriber> handleSubscribe) {
-        delegate.offloadSubscribe(subscriber, handleSubscribe);
-    }
-
-    @Override
     public <T> void offloadSignal(final T signal, final Consumer<T> signalConsumer) {
         delegate.offloadSignal(signal, signalConsumer);
     }

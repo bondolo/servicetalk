@@ -116,58 +116,6 @@ public interface SignalOffloader {
     CompletableSource.Subscriber offloadCancellable(CompletableSource.Subscriber subscriber);
 
     /**
-     * Offloads subscribe call for the passed {@link Subscriber}.
-     *
-     * <h2>Offloading Failures</h2>
-     * Implementations are expected to handle failure to offload, e.g. If a thread pool is used to offload and it
-     * rejects task submissions. In such situations, it is expected that the passed {@link Subscriber} will be
-     * correctly terminated.
-     * <h2>Caution</h2>
-     * This method MUST not be called concurrently with itself or other offload methods here on the same
-     * {@link SignalOffloader} instance.
-     *
-     * @param subscriber {@link Subscriber} for which subscribe call has to be offloaded.
-     * @param handleSubscribe {@link Consumer} to handle the offloaded subscribe call.
-     * @param <T> Type of signal.
-     */
-    <T> void offloadSubscribe(Subscriber<? super T> subscriber, Consumer<Subscriber<? super T>> handleSubscribe);
-
-    /**
-     * Offloads subscribe call for the passed {@link Subscriber}.
-     *
-     * <h2>Offloading Failures</h2>
-     * Implementations are expected to handle failure to offload, e.g. If a thread pool is used to offload and it
-     * rejects task submissions. In such situations, it is expected that the passed {@link Subscriber} will be
-     * correctly terminated.
-     * <h2>Caution</h2>
-     * This method MUST not be called concurrently with itself or other offload methods here on the same
-     * {@link SignalOffloader} instance.
-     *
-     * @param subscriber {@link SingleSource.Subscriber} for which subscribe call has to be offloaded.
-     * @param handleSubscribe {@link Consumer} to handle the offloaded subscribe call.
-     * @param <T> Type of signal.
-     */
-    <T> void offloadSubscribe(SingleSource.Subscriber<? super T> subscriber,
-                              Consumer<SingleSource.Subscriber<? super T>> handleSubscribe);
-
-    /**
-     * Offloads the subscribe call for the passed {@link Subscriber}.
-     *
-     * <h2>Offloading Failures</h2>
-     * Implementations are expected to handle failure to offload, e.g. If a thread pool is used to offload and it
-     * rejects task submissions. In such situations, it is expected that the passed {@link Subscriber} will be
-     * correctly terminated.
-     * <h2>Caution</h2>
-     * This method MUST not be called concurrently with itself or other offload methods here on the same
-     * {@link SignalOffloader} instance.
-     *
-     * @param subscriber {@link Subscriber} for which for which subscribe call has to be offloaded.
-     * @param handleSubscribe {@link Consumer} to handle the offloaded subscribe call.
-     */
-    void offloadSubscribe(CompletableSource.Subscriber subscriber,
-                          Consumer<CompletableSource.Subscriber> handleSubscribe);
-
-    /**
      * Offloads the consumption of the passed {@code signal} by the passed {@link Consumer}.
      *
      * <h2>Caution</h2>

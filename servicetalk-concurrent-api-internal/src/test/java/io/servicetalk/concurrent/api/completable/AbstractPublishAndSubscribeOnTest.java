@@ -32,6 +32,7 @@ import static io.servicetalk.concurrent.api.Completable.never;
 import static java.lang.Thread.currentThread;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 public abstract class AbstractPublishAndSubscribeOnTest {
     static final int ORIGINAL_SUBSCRIBER_THREAD = 0;
@@ -48,12 +49,14 @@ public abstract class AbstractPublishAndSubscribeOnTest {
         AtomicReferenceArray<Thread> capturedThreads = new AtomicReferenceArray<>(2);
 
         Completable original = new CompletableWithExecutor(originalSourceExecutorRule.executor(), completed())
-                .beforeOnComplete(() -> capturedThreads.set(ORIGINAL_SUBSCRIBER_THREAD, currentThread()));
+                .beforeOnComplete(() -> capturedThreads.updateAndGet(ORIGINAL_SUBSCRIBER_THREAD,
+                AbstractPublishAndSubscribeOnTest::updateThread));
 
         Completable offloaded = offloadingFunction.apply(original);
 
         offloaded.afterFinally(allDone::countDown)
-                .beforeOnComplete(() -> capturedThreads.set(OFFLOADED_SUBSCRIBER_THREAD, currentThread()))
+                .beforeOnComplete(() -> capturedThreads.updateAndGet(OFFLOADED_SUBSCRIBER_THREAD,
+                        AbstractPublishAndSubscribeOnTest::updateThread))
                 .subscribe();
         allDone.await();
 
@@ -68,18 +71,23 @@ public abstract class AbstractPublishAndSubscribeOnTest {
 
         Completable original = new CompletableWithExecutor(originalSourceExecutorRule.executor(), never())
                 .afterCancel(() -> {
-                    capturedThreads.set(0, currentThread());
+                    capturedThreads.updateAndGet(0, AbstractPublishAndSubscribeOnTest::updateThread);
                     allDone.countDown();
                 });
 
         Completable offloaded = offloadingFunction.apply(original);
 
-        offloaded.beforeCancel(() -> capturedThreads.set(1, currentThread()))
+        offloaded.beforeCancel(() -> capturedThreads.updateAndGet(1, AbstractPublishAndSubscribeOnTest::updateThread))
                 .subscribe().cancel();
         allDone.await();
 
         verifyCapturedThreads(capturedThreads);
         return capturedThreads;
+    }
+
+    private static Thread updateThread(Thread current) {
+        assertThat(current, nullValue());
+        return currentThread();
     }
 
     public static void verifyCapturedThreads(final AtomicReferenceArray<Thread> capturedThreads) {

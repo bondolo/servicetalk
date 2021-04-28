@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
-import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.isRequestNValid;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.safeCancel;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.safeOnComplete;
@@ -134,42 +133,6 @@ final class ThreadBasedSignalOffloader implements SignalOffloader, Runnable {
     @Override
     public CompletableSource.Subscriber offloadCancellable(CompletableSource.Subscriber subscriber) {
         return addOffloadedEntity(new OffloadedCompletableCancellable(this, subscriber));
-    }
-
-    @Override
-    public <T> void offloadSubscribe(
-            Subscriber<? super T> subscriber, Consumer<Subscriber<? super T>> handleSubscribe) {
-        try {
-            addOffloadedEntity(new OffloadedSignalEntity<>(handleSubscribe, subscriber), true);
-        } catch (EnqueueForOffloadingFailed e) {
-            // Since we failed to enqueue for offloading, we are sure that Subscriber has not been signalled and hence
-            // safe to send the error.
-            deliverErrorFromSource(subscriber, e.getCause());
-        }
-    }
-
-    @Override
-    public <T> void offloadSubscribe(SingleSource.Subscriber<? super T> subscriber,
-                                     Consumer<SingleSource.Subscriber<? super T>> handleSubscribe) {
-        try {
-            addOffloadedEntity(new OffloadedSignalEntity<>(handleSubscribe, subscriber), true);
-        } catch (EnqueueForOffloadingFailed e) {
-            // Since we failed to enqueue for offloading, we are sure that Subscriber has not been signalled and hence
-            // safe to send the error.
-            deliverErrorFromSource(subscriber, e.getCause());
-        }
-    }
-
-    @Override
-    public void offloadSubscribe(CompletableSource.Subscriber subscriber,
-                                 Consumer<CompletableSource.Subscriber> handleSubscribe) {
-        try {
-            addOffloadedEntity(new OffloadedSignalEntity<>(handleSubscribe, subscriber), true);
-        } catch (EnqueueForOffloadingFailed e) {
-            // Since we failed to enqueue for offloading, we are sure that Subscriber has not been signalled and hence
-            // safe to send the error.
-            deliverErrorFromSource(subscriber, e.getCause());
-        }
     }
 
     @Override
