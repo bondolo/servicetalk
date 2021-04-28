@@ -32,6 +32,11 @@ final class SingleAmbWith<T> extends AbstractNoHandleSubscribeSingle<T> {
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         State<T> state = new State<>(subscriber);

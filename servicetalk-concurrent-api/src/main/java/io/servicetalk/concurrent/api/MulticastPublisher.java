@@ -110,6 +110,11 @@ final class MulticastPublisher<T> extends AbstractNoHandleSubscribePublisher<T> 
     }
 
     @Override
+    Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         for (;;) {

@@ -44,6 +44,7 @@ abstract class AbstractSynchronousSingleOperator<T, R> extends AbstractNoHandleS
 
     @Override
     public Executor executor() {
+        // This is an explicitly synchronous operator.
         return immediate();
     }
 

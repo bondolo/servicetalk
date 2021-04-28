@@ -36,6 +36,11 @@ final class OnErrorResumePublisher<T> extends AbstractNoHandleSubscribePublisher
     }
 
     @Override
+    Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         original.delegateSubscribe(new ResumeSubscriber(subscriber, signalOffloader, contextMap, contextProvider),

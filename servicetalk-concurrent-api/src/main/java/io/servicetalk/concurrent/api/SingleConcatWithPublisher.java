@@ -36,6 +36,11 @@ final class SingleConcatWithPublisher<T> extends AbstractNoHandleSubscribePublis
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         original.delegateSubscribe(new ConcatSubscriber<>(subscriber, next), signalOffloader, contextMap,

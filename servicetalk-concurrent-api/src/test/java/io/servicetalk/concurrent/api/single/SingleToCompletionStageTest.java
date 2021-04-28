@@ -85,7 +85,7 @@ public class SingleToCompletionStageTest {
 
     @BeforeEach
     public void beforeTest() {
-        source = new LegacyTestSingle<>(executorExtension.executor(), true, true);
+        source = new LegacyTestSingle<>(true, true);
     }
 
     @Test

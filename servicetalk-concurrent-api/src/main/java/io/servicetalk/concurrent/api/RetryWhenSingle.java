@@ -40,6 +40,11 @@ final class RetryWhenSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber<? super T> subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         // For the current subscribe operation we want to use contextMap directly, but in the event a re-subscribe

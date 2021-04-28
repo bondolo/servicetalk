@@ -50,6 +50,7 @@ abstract class AbstractSynchronousPublisherOperator<T, R> extends AbstractNoHand
 
     @Override
     public Executor executor() {
+        // This is an explicitly synchronous operator.
         return immediate();
     }
 }

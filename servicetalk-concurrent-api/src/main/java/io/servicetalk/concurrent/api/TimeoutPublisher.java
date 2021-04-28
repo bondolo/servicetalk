@@ -73,6 +73,11 @@ final class TimeoutPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
     }
 
     @Override
+    public io.servicetalk.concurrent.api.Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(Subscriber<? super T> subscriber, SignalOffloader signalOffloader,
                          AsyncContextMap contextMap, AsyncContextProvider contextProvider) {
         original.delegateSubscribe(

@@ -31,7 +31,7 @@ import static io.servicetalk.concurrent.internal.SubscriberUtils.checkDuplicateS
 abstract class AbstractPubToSingle<T> extends AbstractNoHandleSubscribeSingle<T> {
     private final Publisher<T> source;
 
-    AbstractPubToSingle(final Executor executor, Publisher<T> source) {
+    AbstractPubToSingle(Publisher<T> source) {
         this.source = source;
     }
 
@@ -50,6 +50,11 @@ abstract class AbstractPubToSingle<T> extends AbstractNoHandleSubscribeSingle<T>
     }
 
     abstract PublisherSource.Subscriber<T> newSubscriber(Subscriber<? super T> original);
+
+    @Override
+    public Executor executor() {
+        return source.executor();
+    }
 
     abstract static class AbstractPubToSingleSubscriber<T> implements PublisherSource.Subscriber<T> {
         private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPubToSingleSubscriber.class);

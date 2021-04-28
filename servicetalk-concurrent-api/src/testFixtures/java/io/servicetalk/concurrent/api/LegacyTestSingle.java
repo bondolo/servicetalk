@@ -62,11 +62,6 @@ public class LegacyTestSingle<T> extends Single<T> implements SingleSource.Subsc
         this.cacheResults = cacheResults;
     }
 
-    public LegacyTestSingle(Executor executor, boolean invokeListenerPostCancel, boolean cacheResults) {
-        this.invokeListenerPostCancel = invokeListenerPostCancel;
-        this.cacheResults = cacheResults;
-    }
-
     @Override
     public synchronized void handleSubscribe(Subscriber<? super T> subscriber) {
         subscribeCount.incrementAndGet();

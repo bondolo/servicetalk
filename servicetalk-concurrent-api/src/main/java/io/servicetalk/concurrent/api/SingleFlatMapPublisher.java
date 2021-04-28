@@ -37,6 +37,11 @@ final class SingleFlatMapPublisher<T, R> extends AbstractNoHandleSubscribePublis
     }
 
     @Override
+    public Executor executor() {
+        return original.executor();
+    }
+
+    @Override
     void handleSubscribe(final Subscriber<? super R> subscriber, final SignalOffloader signalOffloader,
                          final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
         original.delegateSubscribe(new SubscriberImpl<>(subscriber, nextFactory, signalOffloader,

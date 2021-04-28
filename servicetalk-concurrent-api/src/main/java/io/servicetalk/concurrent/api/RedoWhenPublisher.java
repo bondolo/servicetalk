@@ -45,13 +45,18 @@ final class RedoWhenPublisher<T> extends AbstractNoHandleSubscribePublisher<T> {
      * @param shouldRedo {@link BiFunction} to create a {@link Completable} that determines whether to redo the
      * operation.
      * @param forRetry If redo has to be done for error i.e. it is used for retry. If {@code true} completion for
- * original source will complete the subscriber. Otherwise, error will send the error to the subscriber.
+     * original source will complete the subscriber. Otherwise, error will send the error to the subscriber.
      */
     RedoWhenPublisher(Publisher<T> original, BiFunction<Integer, TerminalNotification, Completable> shouldRedo,
                       boolean forRetry) {
         this.original = original;
         this.shouldRedo = shouldRedo;
         this.forRetry = forRetry;
+    }
+
+    @Override
+    Executor executor() {
+        return original.executor();
     }
 
     @Override
