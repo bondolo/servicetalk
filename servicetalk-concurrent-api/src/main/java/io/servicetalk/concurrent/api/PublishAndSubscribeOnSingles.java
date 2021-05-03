@@ -17,6 +17,7 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.SingleSource;
 import io.servicetalk.concurrent.internal.SignalOffloader;
+import io.servicetalk.concurrent.internal.SignalOffloaderFactory;
 
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
@@ -71,9 +72,15 @@ final class PublishAndSubscribeOnSingles {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
-            original.subscribeWithSharedContext(
-                    signalOffloader.offloadSubscriber(
-                            contextProvider.wrapSingleSubscriber(subscriber, contextMap)), contextProvider);
+            SignalOffloader offloader = ((SignalOffloaderFactory) executor).newSignalOffloader(executor);
+            try {
+                executor.execute(() -> original.subscribeWithSharedContext(
+                    offloader.offloadSubscriber(
+                            contextProvider.wrapSingleSubscriber(subscriber, contextMap)), contextProvider));
+            } catch (Throwable throwable) {
+                // We assume that if executor accepted the task, it was run and no exception will be thrown from run.
+                deliverErrorFromSource(subscriber, throwable);
+            }
         }
 
         @Override
@@ -102,8 +109,9 @@ final class PublishAndSubscribeOnSingles {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
+            SignalOffloader offloader = ((SignalOffloaderFactory) executor).newSignalOffloader(executor);
             original.subscribeWithSharedContext(
-                    signalOffloader.offloadSubscriber(
+                    offloader.offloadSubscriber(
                             contextProvider.wrapSingleSubscriber(subscriber, contextMap)), contextProvider);
         }
 

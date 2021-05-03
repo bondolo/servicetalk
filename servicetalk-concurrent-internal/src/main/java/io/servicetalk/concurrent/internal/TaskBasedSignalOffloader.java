@@ -240,7 +240,7 @@ final class TaskBasedSignalOffloader implements SignalOffloader {
         }
     }
 
-    private static final class OffloadedSubscriber<T> implements Subscriber<T>, Runnable {
+    static final class OffloadedSubscriber<T> implements Subscriber<T>, Runnable {
         private static final int STATE_IDLE = 0;
         private static final int STATE_ENQUEUED = 1;
         private static final int STATE_EXECUTING = 2;

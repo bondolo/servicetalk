@@ -42,6 +42,10 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class PublisherBufferConcurrencyTest {
+    static {
+        AsyncContext.disable();
+    }
+
     private static final String THREAD_NAME_PREFIX = "buffer-concurrency-test";
     private static final Key<Integer> CTX_KEY = Key.newKey("foo");
 

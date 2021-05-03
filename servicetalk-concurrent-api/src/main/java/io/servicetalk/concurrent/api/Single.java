@@ -1573,9 +1573,12 @@ public abstract class Single<T> {
      * <p>
      * From a sequential programming point of view this method is roughly equivalent to the following:
      * <pre>{@code
-     *      for (Future<T> ft: futures) { // Provided Futures (analogous to the Singles here)
-     *          // This is an approximation, this operator will pick the first result from either of the futures.
-     *          return ft.get();
+     *      while(true) {
+     *        for (Future<T> ft: futures) { // Provided Futures (analogous to the Singles here)
+     *            if (ft.isDone()) {
+     *              return ft.get();
+     *            }
+     *        }
      *      }
      * }</pre>
      *
