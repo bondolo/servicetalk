@@ -17,8 +17,9 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.SingleSource;
 import io.servicetalk.concurrent.internal.SignalOffloader;
-import io.servicetalk.concurrent.internal.SignalOffloaderFactory;
+import io.servicetalk.concurrent.internal.SignalOffloaders;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
 
 /**
@@ -39,15 +40,18 @@ final class PublishAndSubscribeOnSingles {
     }
 
     static <T> Single<T> publishAndSubscribeOn(Single<T> original, Executor executor) {
-        return original.executor() == executor ? original : new PublishAndSubscribeOn<>(executor, original);
+        return original.executor() == executor || executor == immediate() ?
+                original : new PublishAndSubscribeOn<>(executor, original);
     }
 
     static <T> Single<T> publishOn(Single<T> original, Executor executor) {
-        return original.executor() == executor ? original : new PublishOn<>(executor, original);
+        return original.executor() == executor || executor == immediate() ?
+                original : new PublishOn<>(executor, original);
     }
 
     static <T> Single<T> subscribeOn(Single<T> original, Executor executor) {
-        return original.executor() == executor ? original : new SubscribeOn<>(executor, original);
+        return original.executor() == executor || executor == immediate() ?
+                original : new SubscribeOn<>(executor, original);
     }
 
     private static final class PublishAndSubscribeOn<T> extends AbstractNoHandleSubscribeSingle<T> {
@@ -72,7 +76,7 @@ final class PublishAndSubscribeOnSingles {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
-            SignalOffloader offloader = ((SignalOffloaderFactory) executor).newSignalOffloader(executor);
+            SignalOffloader offloader = SignalOffloaders.newOffloaderFor(executor);
             try {
                 executor.execute(() -> original.subscribeWithSharedContext(
                     offloader.offloadSubscriber(
@@ -109,7 +113,7 @@ final class PublishAndSubscribeOnSingles {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
-            SignalOffloader offloader = ((SignalOffloaderFactory) executor).newSignalOffloader(executor);
+            SignalOffloader offloader = SignalOffloaders.newOffloaderFor(executor);
             original.subscribeWithSharedContext(
                     offloader.offloadSubscriber(
                             contextProvider.wrapSingleSubscriber(subscriber, contextMap)), contextProvider);

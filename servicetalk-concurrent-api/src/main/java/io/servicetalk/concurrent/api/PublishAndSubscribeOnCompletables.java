@@ -17,8 +17,9 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.CompletableSource.Subscriber;
 import io.servicetalk.concurrent.internal.SignalOffloader;
-import io.servicetalk.concurrent.internal.SignalOffloaderFactory;
+import io.servicetalk.concurrent.internal.SignalOffloaders;
 
+import static io.servicetalk.concurrent.api.Executors.immediate;
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadPublish;
 import static io.servicetalk.concurrent.api.MergedExecutors.mergeAndOffloadSubscribe;
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
@@ -42,15 +43,18 @@ final class PublishAndSubscribeOnCompletables {
     }
 
     static Completable publishAndSubscribeOn(Completable original, Executor executor) {
-        return original.executor() == executor ? original : new PublishAndSubscribeOn(executor, original);
+        return original.executor() == executor || executor == immediate() ?
+                original : new PublishAndSubscribeOn(executor, original);
     }
 
     static Completable publishOn(Completable original, Executor executor) {
-        return original.executor() == executor ? original : new PublishOn(executor, original);
+        return original.executor() == executor || executor == immediate() ?
+                original : new PublishOn(executor, original);
     }
 
     static Completable subscribeOn(Completable original, Executor executor) {
-        return original.executor() == executor ? original : new SubscribeOn(executor, original);
+        return original.executor() == executor || executor == immediate() ?
+                original : new SubscribeOn(executor, original);
     }
 
     private static final class PublishAndSubscribeOn extends AbstractNoHandleSubscribeCompletable {
@@ -66,7 +70,7 @@ final class PublishAndSubscribeOnCompletables {
         void handleSubscribe(final Subscriber subscriber, final SignalOffloader signalOffloader,
                              final AsyncContextMap contextMap, final AsyncContextProvider contextProvider) {
             try {
-                SignalOffloader offloader = ((SignalOffloaderFactory) executor).newSignalOffloader(executor);
+                SignalOffloader offloader = SignalOffloaders.newOffloaderFor(executor);
                 executor.execute(() ->
                         original.subscribeWithSharedContext(
                                 offloader.offloadSubscriber(
@@ -103,7 +107,7 @@ final class PublishAndSubscribeOnCompletables {
             // This operator acts as a boundary that changes the Executor from original to the rest of the execution
             // chain. If there is already an Executor defined for original, it will be used to offload signals until
             // they hit this operator.
-            SignalOffloader offloader = ((SignalOffloaderFactory) executor).newSignalOffloader(executor);
+            SignalOffloader offloader = SignalOffloaders.newOffloaderFor(executor);
             original.subscribeWithSharedContext(
                     offloader.offloadSubscriber(
                             contextProvider.wrapCompletableSubscriber(subscriber, contextMap)), contextProvider);
