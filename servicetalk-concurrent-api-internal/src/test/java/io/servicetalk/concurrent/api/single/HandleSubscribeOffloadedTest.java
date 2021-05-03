@@ -30,6 +30,7 @@ public class HandleSubscribeOffloadedTest extends AbstractHandleSubscribeOffload
         @Override
         protected void handleSubscribe(final SingleSource.Subscriber<? super Integer> subscriber) {
             handleSubscribeInvokerRef.set(currentThread());
+            offloadSingleSubscribeCalled.incrementAndGet();
             subscriber.onSubscribe(IGNORE_CANCEL);
             subscriber.onSuccess(1);
         }

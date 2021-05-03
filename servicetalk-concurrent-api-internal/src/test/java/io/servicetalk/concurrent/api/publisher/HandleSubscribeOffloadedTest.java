@@ -31,6 +31,7 @@ public class HandleSubscribeOffloadedTest extends AbstractHandleSubscribeOffload
         @Override
         protected void handleSubscribe(final PublisherSource.Subscriber<? super Integer> subscriber) {
             handleSubscribeInvokerRef.set(currentThread());
+            offloadPublisherSubscribeCalled.incrementAndGet();
             subscriber.onSubscribe(new ScalarValueSubscription<>(1, subscriber));
         }
     };
