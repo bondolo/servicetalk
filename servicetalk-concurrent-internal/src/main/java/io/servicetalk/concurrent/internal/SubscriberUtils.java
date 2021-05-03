@@ -137,6 +137,13 @@ public final class SubscriberUtils {
     public static <T> void deliverCompleteFromSource(Subscriber<T> subscriber) {
         try {
             subscriber.onSubscribe(EMPTY_SUBSCRIPTION);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                handleExceptionFromOnSubscribe(subscriber, ae);
+                return;
+            }
         } catch (Throwable t) {
             handleExceptionFromOnSubscribe(subscriber, t);
             return;
@@ -154,6 +161,13 @@ public final class SubscriberUtils {
     public static <T> void deliverSuccessFromSource(SingleSource.Subscriber<T> subscriber, @Nullable T value) {
         try {
             subscriber.onSubscribe(IGNORE_CANCEL);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                handleExceptionFromOnSubscribe(subscriber, ae);
+                return;
+            }
         } catch (Throwable t) {
             handleExceptionFromOnSubscribe(subscriber, t);
             return;
@@ -169,6 +183,13 @@ public final class SubscriberUtils {
     public static void deliverCompleteFromSource(CompletableSource.Subscriber subscriber) {
         try {
             subscriber.onSubscribe(IGNORE_CANCEL);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                handleExceptionFromOnSubscribe(subscriber, ae);
+                return;
+            }
         } catch (Throwable t) {
             handleExceptionFromOnSubscribe(subscriber, t);
             return;
@@ -186,6 +207,13 @@ public final class SubscriberUtils {
     public static <T> void deliverErrorFromSource(Subscriber<T> subscriber, Throwable cause) {
         try {
             subscriber.onSubscribe(EMPTY_SUBSCRIPTION);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                handleExceptionFromOnSubscribe(subscriber, ae);
+                return;
+            }
         } catch (Throwable t) {
             handleExceptionFromOnSubscribe(subscriber, t);
             return;
@@ -203,6 +231,13 @@ public final class SubscriberUtils {
     public static <T> void deliverErrorFromSource(SingleSource.Subscriber<T> subscriber, Throwable cause) {
         try {
             subscriber.onSubscribe(IGNORE_CANCEL);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                handleExceptionFromOnSubscribe(subscriber, ae);
+                return;
+            }
         } catch (Throwable t) {
             handleExceptionFromOnSubscribe(subscriber, t);
             return;
@@ -219,6 +254,13 @@ public final class SubscriberUtils {
     public static void deliverErrorFromSource(CompletableSource.Subscriber subscriber, Throwable cause) {
         try {
             subscriber.onSubscribe(IGNORE_CANCEL);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                handleExceptionFromOnSubscribe(subscriber, ae);
+                return;
+            }
         } catch (Throwable t) {
             handleExceptionFromOnSubscribe(subscriber, t);
             return;
@@ -292,6 +334,12 @@ public final class SubscriberUtils {
     public static void safeOnError(CompletableSource.Subscriber subscriber, Throwable cause) {
         try {
             subscriber.onError(cause);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from onError of Subscriber {}.", subscriber, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from onError of Subscriber {}.", subscriber, t);
         }
@@ -307,6 +355,12 @@ public final class SubscriberUtils {
     public static <T> void safeOnError(SingleSource.Subscriber<T> subscriber, Throwable cause) {
         try {
             subscriber.onError(cause);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from onError of Subscriber {}.", subscriber, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from onError of Subscriber {}.", subscriber, t);
         }
@@ -322,6 +376,12 @@ public final class SubscriberUtils {
     public static <T> void safeOnError(PublisherSource.Subscriber<T> subscriber, Throwable cause) {
         try {
             subscriber.onError(cause);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from onError of Subscriber {}.", subscriber, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from onError of Subscriber {}.", subscriber, t);
         }
@@ -336,6 +396,12 @@ public final class SubscriberUtils {
     public static <T> void safeOnComplete(PublisherSource.Subscriber<T> subscriber) {
         try {
             subscriber.onComplete();
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from onComplete of Subscriber {}.", subscriber, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from onComplete of Subscriber {}.", subscriber, t);
         }
@@ -351,6 +417,12 @@ public final class SubscriberUtils {
     public static <T> void safeOnSuccess(SingleSource.Subscriber<T> subscriber, @Nullable T value) {
         try {
             subscriber.onSuccess(value);
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from onSuccess of Subscriber {}.", subscriber, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from onSuccess of Subscriber {}.", subscriber, t);
         }
@@ -364,6 +436,12 @@ public final class SubscriberUtils {
     public static void safeOnComplete(CompletableSource.Subscriber subscriber) {
         try {
             subscriber.onComplete();
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from onComplete of Subscriber {}.", subscriber, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from onComplete of Subscriber {}.", subscriber, t);
         }
@@ -376,6 +454,12 @@ public final class SubscriberUtils {
     public static void safeCancel(Cancellable cancellable) {
         try {
             cancellable.cancel();
+        } catch (AssertionError ae) {
+            if (SubscriberUtils.class.desiredAssertionStatus()) {
+                throw ae;
+            } else {
+                LOGGER.info("Ignoring assertion from cancel {}.", cancellable, ae);
+            }
         } catch (Throwable t) {
             LOGGER.info("Ignoring exception from cancel {}.", cancellable, t);
         }
