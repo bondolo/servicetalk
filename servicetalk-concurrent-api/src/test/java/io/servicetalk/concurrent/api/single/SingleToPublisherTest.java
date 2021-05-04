@@ -142,7 +142,9 @@ public class SingleToPublisherTest {
                 errors.add(new AssertionError("Invalid thread invoked cancel. Thread: " +
                         currentThread()));
             }
-        }).afterCancel(analyzed::countDown).subscribeOn(executorExtension.executor()).toPublisher())
+        }).afterCancel(analyzed::countDown)
+                .subscribeOn(executorExtension.executor())
+                .toPublisher())
                 .subscribe(subscriber);
         TestCancellable cancellable = new TestCancellable();
         single.onSubscribe(cancellable); // waits till subscribed.

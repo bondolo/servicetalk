@@ -20,6 +20,7 @@ import io.servicetalk.concurrent.internal.RejectedSubscribeException;
 import io.servicetalk.concurrent.internal.SignalOffloader;
 
 import static io.servicetalk.concurrent.internal.SubscriberUtils.deliverErrorFromSource;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link Publisher} that does not expect to receive a call to {@link #handleSubscribe(Subscriber)} since it overrides
@@ -44,6 +45,6 @@ abstract class AbstractNoHandleSubscribePublisher<T> extends Publisher<T> implem
 
     @Override
     public final void subscribe(final Subscriber<? super T> subscriber) {
-        subscribeInternal(subscriber);
+        subscribeInternal(requireNonNull(subscriber, "subscriber"));
     }
 }
