@@ -48,7 +48,7 @@ import static java.util.concurrent.atomic.AtomicIntegerFieldUpdater.newUpdater;
  * enough capacity in the {@link Consumer executor} when sending signals as compared to detecting insufficient capacity
  * earlier as with {@link ThreadBasedSignalOffloader}.
  */
-final class TaskBasedSignalOffloader implements SignalOffloader {
+public final class TaskBasedSignalOffloader implements SignalOffloader {
 
     private static final Object NULL_WRAPPER = new Object();
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskBasedSignalOffloader.class);
@@ -637,7 +637,7 @@ final class TaskBasedSignalOffloader implements SignalOffloader {
         }
     }
 
-    private static final class OffloadedCancellable implements Cancellable {
+    static final class OffloadedCancellable implements Cancellable {
         private final Cancellable cancellable;
         private final Executor executor;
 
@@ -663,7 +663,7 @@ final class TaskBasedSignalOffloader implements SignalOffloader {
         }
     }
 
-    private static final class OffloadedCancellableSingleSubscriber<T> implements SingleSource.Subscriber<T> {
+    static final class OffloadedCancellableSingleSubscriber<T> implements SingleSource.Subscriber<T> {
         private final SingleSource.Subscriber<? super T> subscriber;
         private final Executor executor;
 

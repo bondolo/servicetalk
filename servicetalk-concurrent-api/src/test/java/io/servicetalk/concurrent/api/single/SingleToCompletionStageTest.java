@@ -122,7 +122,7 @@ public class SingleToCompletionStageTest {
 
     @Test
     public void thenApply() throws Exception {
-        thenApply(source.toCompletionStage().thenApply(SingleToCompletionStageTest::strLenStThread), "thenApply");
+        thenApply(source.toCompletionStage().thenApply(SingleToCompletionStageTest::strLenJdkThread), "thenApply");
     }
 
     @Test
@@ -212,8 +212,8 @@ public class SingleToCompletionStageTest {
         CompletionStage<String> stage1 = source.toCompletionStage();
 
         // Both listeners have to be applied on stage1.
-        CompletionStage<Integer> stage2 = stage1.thenApply(SingleToCompletionStageTest::strLenStThread);
-        CompletionStage<Integer> stage3 = stage1.thenApply(SingleToCompletionStageTest::strLenStThread);
+        CompletionStage<Integer> stage2 = stage1.thenApply(SingleToCompletionStageTest::strLenJdkThread);
+        CompletionStage<Integer> stage3 = stage1.thenApply(SingleToCompletionStageTest::strLenJdkThread);
 
         jdkExecutor.execute(() -> source.onSuccess(expected1));
 
@@ -228,13 +228,13 @@ public class SingleToCompletionStageTest {
     @Test
     public void thenAccept() throws Exception {
         AtomicReference<String> stringRef = new AtomicReference<>();
-        thenAccept(source.toCompletionStage().thenAccept(stThread(stringRef)), stringRef, "thenAccept");
+        thenAccept(source.toCompletionStage().thenAccept(jdkThread(stringRef)), stringRef, "thenAccept");
     }
 
     @Test
     public void thenAcceptNull() throws Exception {
         AtomicReference<String> stringRef = new AtomicReference<>();
-        thenAccept(source.toCompletionStage().thenAccept(stThread(stringRef)), stringRef, null);
+        thenAccept(source.toCompletionStage().thenAccept(jdkThread(stringRef)), stringRef, null);
     }
 
     @Test
@@ -287,7 +287,7 @@ public class SingleToCompletionStageTest {
     @Test
     public void thenRun() throws Exception {
         AtomicBoolean aBoolean = new AtomicBoolean();
-        thenRun(source.toCompletionStage().thenRun(trueStThread(aBoolean)), aBoolean, "thenRun");
+        thenRun(source.toCompletionStage().thenRun(trueJdkThread(aBoolean)), aBoolean, "thenRun");
     }
 
     @Test
@@ -659,7 +659,7 @@ public class SingleToCompletionStageTest {
     public void whenComplete() throws Exception {
         AtomicReference<String> strRef = new AtomicReference<>();
         whenComplete(source.toCompletionStage().whenComplete((s, t) -> {
-            verifyInStExecutorThread();
+            verifyInJdkExecutorThread();
             strRef.set(s);
         }), "foo", strRef);
     }
@@ -668,7 +668,7 @@ public class SingleToCompletionStageTest {
     public void whenCompleteNull() throws Exception {
         AtomicReference<String> strRef = new AtomicReference<>();
         whenComplete(source.toCompletionStage().whenComplete((s, t) -> {
-            verifyInStExecutorThread();
+            verifyInJdkExecutorThread();
             strRef.set(s);
         }), null, strRef);
     }
@@ -704,7 +704,7 @@ public class SingleToCompletionStageTest {
     public void handle() throws Exception {
         AtomicReference<String> strRef = new AtomicReference<>();
         handle(source.toCompletionStage().handle((s, t) -> {
-            verifyInStExecutorThread();
+            verifyInJdkExecutorThread();
             strRef.set(s);
             return strLen(s);
         }), "foo", strRef);
@@ -714,7 +714,7 @@ public class SingleToCompletionStageTest {
     public void handleNull() throws Exception {
         AtomicReference<String> strRef = new AtomicReference<>();
         handle(source.toCompletionStage().handle((s, t) -> {
-            verifyInStExecutorThread();
+            verifyInJdkExecutorThread();
             strRef.set(s);
             return strLen(s);
         }), null, strRef);
