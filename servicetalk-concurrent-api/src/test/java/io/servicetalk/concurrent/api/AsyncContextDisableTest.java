@@ -60,6 +60,7 @@ public class AsyncContextDisableTest {
                     asyncContextPutIgnoreUnsupported(K1, expectedValue);
                     assertNull(executor2.submit(() -> AsyncContext.get(K1)).toFuture().get());
                 } finally {
+                    // MUST re-enable as state leaks between tests
                     AsyncContext.enable();
                 }
             } finally {
@@ -99,6 +100,7 @@ public class AsyncContextDisableTest {
                     executor.closeAsync().toFuture().get();
                 }
             } finally {
+                // MUST re-enable as state leaks between tests
                 AsyncContext.enable();
             }
         }

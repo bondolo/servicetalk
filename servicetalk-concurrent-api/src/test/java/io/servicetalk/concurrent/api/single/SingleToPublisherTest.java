@@ -15,7 +15,6 @@
  */
 package io.servicetalk.concurrent.api.single;
 
-import io.servicetalk.concurrent.api.AsyncContext;
 import io.servicetalk.concurrent.api.Executor;
 import io.servicetalk.concurrent.api.ExecutorExtension;
 import io.servicetalk.concurrent.api.Single;
@@ -43,10 +42,6 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 
 public class SingleToPublisherTest {
-
-    static {
-        AsyncContext.disable();
-    }
 
     @RegisterExtension
     final ExecutorExtension<Executor> executorExtension = ExecutorExtension.withCachedExecutor();

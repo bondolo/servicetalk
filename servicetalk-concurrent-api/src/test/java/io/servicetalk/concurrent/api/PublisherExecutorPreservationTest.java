@@ -23,10 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class PublisherExecutorPreservationTest {
 
-    static {
-        AsyncContext.disable();
-    }
-
     @RegisterExtension
     static final ExecutorExtension<Executor> EXEC = ExecutorExtension.withCachedExecutor("test");
 
