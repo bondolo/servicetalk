@@ -22,6 +22,8 @@ package io.servicetalk.concurrent.api;
  */
 public final class SingleWithExecutor<T> extends AbstractSynchronousSingleOperator<T, T> {
 
+    private Executor executor;
+
     /**
      * New instance.
      * @param executor {@link Executor} for this {@link Single}.
@@ -29,6 +31,12 @@ public final class SingleWithExecutor<T> extends AbstractSynchronousSingleOperat
      */
     public SingleWithExecutor(final Executor executor, Single<T> delegate) {
         super(delegate);
+        this.executor = executor;
+    }
+
+    @Override
+    public Executor executor() {
+        return executor;
     }
 
     @Override

@@ -20,6 +20,8 @@ package io.servicetalk.concurrent.api;
  */
 public final class CompletableWithExecutor extends AbstractSynchronousCompletableOperator {
 
+    private final Executor executor;
+
     /**
      * New instance.
      * @param executor {@link Executor} for this {@link Completable}.
@@ -27,6 +29,12 @@ public final class CompletableWithExecutor extends AbstractSynchronousCompletabl
      */
     public CompletableWithExecutor(final Executor executor, Completable delegate) {
         super(delegate);
+        this.executor = executor;
+    }
+
+    @Override
+    public Executor executor() {
+        return executor;
     }
 
     @Override

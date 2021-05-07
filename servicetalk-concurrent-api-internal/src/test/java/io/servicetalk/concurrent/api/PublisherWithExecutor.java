@@ -22,6 +22,8 @@ package io.servicetalk.concurrent.api;
  */
 public final class PublisherWithExecutor<T> extends AbstractSynchronousPublisherOperator<T, T> {
 
+    private final Executor executor;
+
     /**
      * New instance.
      * @param executor {@link Executor} for this {@link Publisher}.
@@ -29,6 +31,12 @@ public final class PublisherWithExecutor<T> extends AbstractSynchronousPublisher
      */
     public PublisherWithExecutor(final Executor executor, Publisher<T> delegate) {
         super(delegate);
+        this.executor = executor;
+    }
+
+    @Override
+    public Executor executor() {
+        return executor;
     }
 
     @Override
