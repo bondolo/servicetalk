@@ -60,7 +60,7 @@ public class SingleAmbWithAsyncTest {
 
     @Test
     public void offloadErrorFromFirst() {
-        assertThrowsWithDeliberateExceptionAsCause(() -> testOffloadSecond(never(), failed(DELIBERATE_EXCEPTION)));
+        assertThrowsWithDeliberateExceptionAsCause(() -> testOffloadSecond(failed(DELIBERATE_EXCEPTION), never()));
     }
 
     @Test
