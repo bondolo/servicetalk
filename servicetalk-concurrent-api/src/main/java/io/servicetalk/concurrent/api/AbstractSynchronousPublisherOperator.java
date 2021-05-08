@@ -17,7 +17,6 @@ package io.servicetalk.concurrent.api;
 
 import io.servicetalk.concurrent.internal.SignalOffloader;
 
-import static io.servicetalk.concurrent.api.Executors.immediate;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -50,7 +49,6 @@ abstract class AbstractSynchronousPublisherOperator<T, R> extends AbstractNoHand
 
     @Override
     public Executor executor() {
-        // This is an explicitly synchronous operator.
-        return immediate();
+        return original.executor();
     }
 }
