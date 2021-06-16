@@ -19,6 +19,8 @@ import io.servicetalk.concurrent.api.Single;
 
 import org.junit.Test;
 
+import java.util.concurrent.atomic.AtomicReferenceArray;
+
 import static io.servicetalk.concurrent.api.Executors.immediate;
 import static org.hamcrest.MatcherAssert.assertThat;
 
