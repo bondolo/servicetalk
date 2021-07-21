@@ -66,7 +66,7 @@ final class PublishAndSubscribeOnPublishers {
         }
 
         @Override
-        public Subscriber<? super T> apply(Subscriber<? super T> subscriber) {
+        public Subscriber<? super T> apply(final Subscriber<? super T> subscriber) {
             return new OffloadedSubscriber<>(subscriber, this::offload, executor());
         }
 
@@ -91,12 +91,12 @@ final class PublishAndSubscribeOnPublishers {
      */
     private static final class SubscribeOn<T> extends TaskBasedAsyncPublisherOperator<T> {
 
-        SubscribeOn(final Publisher<T> original, BooleanSupplier offload, final Executor executor) {
+        SubscribeOn(final Publisher<T> original, final BooleanSupplier offload, final Executor executor) {
             super(original, offload, executor);
         }
 
         @Override
-        public Subscriber<? super T> apply(Subscriber<? super T> subscriber) {
+        public Subscriber<? super T> apply(final Subscriber<? super T> subscriber) {
             return new OffloadedSubscriptionSubscriber<>(subscriber, this::offload, executor());
         }
 
